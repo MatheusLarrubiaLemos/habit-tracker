@@ -1,0 +1,255 @@
+/* ========== RESET BÁSICO ========== */
+* {
+  box-sizing: border-box;
+  font-family: Inter, 'Segoe UI', Arial, Helvetica, sans-serif;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f5f7fb;
+  color: #111;
+  padding: 10px;            /* espaço nas bordas */
+}
+
+/* ========== CONTAINER PRINCIPAL ========== */
+.app {
+  max-width: 100%;          /* ocupa toda a largura disponível */
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.08);
+}
+
+/* ========== CABEÇALHO ========== */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ========== TABS (MESES) ========== */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #1f2937;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.tab.active {
+  background: #4f46e5;
+  color: #fff;
+}
+
+/* ========== CONTROLES ========== */
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.controls .color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+label {
+  font-size: 13px;
+  color: #374151;
+}
+
+input[type="text"] {
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  min-width: 200px;
+  flex: 1 1 auto;
+}
+
+button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: #111827;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+/* ========== ÁREA DA TABELA (COM ROLAGEM HORIZONTAL) ========== */
+.table-wrap {
+  overflow-x: auto;         /* barra de rolagem horizontal aqui, se necessário */
+  border: 1px solid #e6e9f2;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+/* Tabela – largura mínima para não espremer as colunas */
+table {
+  border-collapse: collapse;
+  min-width: 800px;         /* ajuste conforme desejar (mais largo = mais colunas visíveis) */
+  width: 100%;
+}
+
+/* Estilo das células */
+th, td {
+  border: 1px solid #eef2f7;
+  padding: 10px 8px;
+  text-align: center;
+  white-space: nowrap;      /* impede quebra de texto dentro dos dias */
+}
+
+/* Primeira coluna (nome do hábito) fixa ao rolar horizontalmente */
+th:first-child, td:first-child {
+  background: #fafafa;
+  font-weight: bold;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+/* Para manter o fundo da primeira coluna consistente */
+td:first-child {
+  background: #fff;
+}
+body.dark td:first-child {
+  background: #121212;
+}
+
+/* Células dos dias */
+td.dayCell {
+  cursor: pointer;
+  min-width: 40px;          /* tamanho mínimo confortável para clicar */
+}
+
+td.dayCell.marked {
+  color: #fff;              /* texto branco sobre fundo colorido */
+}
+
+/* ========== RODAPÉ ========== */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+  color: #374151;
+}
+
+/* ========== MODO ESCURO (OPCIONAL) ========== */
+body.dark {
+  background: #000;
+  color: #fafafa;
+}
+
+body.dark .app {
+  background: #121212;
+  box-shadow: none;
+  border: 1px solid #222;
+}
+
+body.dark .tab {
+  background: transparent;
+  color: #ddd;
+}
+
+body.dark .tab.active {
+  background: #405de6;
+  color: #fff;
+}
+
+body.dark button.ghost {
+  color: #ccc;
+  border-color: #333;
+}
+
+body.dark input[type="text"] {
+  background: #1c1c1c;
+  color: #ccc;
+  border-color: #333;
+}
+
+body.dark .table-wrap {
+  border-color: #333;
+}
+
+body.dark table {
+  background: #121212;
+}
+
+body.dark th, 
+body.dark td {
+  border-color: #3f3d3d;
+}
+
+body.dark th:first-child,
+body.dark td:first-child {
+  background: #1c1c1c;
+}
+
+body.dark .footer {
+  color: #bbb;
+  border-top-color: #333;
+}
+
+/* ========== RESPONSIVIDADE EXTRA (OPCIONAL) ========== */
+@media (max-width: 600px) {
+  body {
+    padding: 5px;
+  }
+  .app {
+    padding: 12px;
+  }
+  h1 {
+    font-size: 1.3rem;
+  }
+  .tab {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  .footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
