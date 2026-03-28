@@ -1,102 +1,74 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Habit Tracker — App Local</title>
   <link rel="stylesheet" href="habit-tracker.css">
 </head>
 <body>
   <div class="app">
-    <!-- Header: título e controles globais
-         - `#monthYear` mostra o mês e ano atuais
-         - `#darkToggle` alterna modo claro/escuro
-         - `#optionsBtn` é o botão camuflado que abre o painel de export/import
-    -->
+    <!-- ==================== CABEÇALHO ==================== -->
     <header>
+      <!-- Lado esquerdo: título e navegação de anos -->
       <div>
-        <h1>Habit Tracker</h1>
-        <!-- Mostra: "Maio 2026" por exemplo, atualizado via JS -->
+        <h1>📅 Habit Tracker</h1>
         <div class="year-nav">
-            <button id="prevYearBtn" class="year-btn">«</button>  
-            <span id="currentYear" class="current-year"></span>
-            <button id="nextYearBtn" class="year-btn">»</button>
-          </div>
-          
-        <div id="monthYear" style="font-size:13px;color:#6b7280;margin-top:4px">--</div>
+          <button id="prevYearBtn" class="year-btn" title="Ano anterior">«</button>
+          <span id="currentYear" class="current-year"></span>
+          <button id="nextYearBtn" class="year-btn" title="Próximo ano">»</button>
+        </div>
+        <div id="monthYear" class="month-year-display">--</div>
       </div>
+
+      <!-- Lado direito: botões de tema e configurações -->
       <div class="top-right">
-        <button id="darkToggle" class="ghost" title="Alternar modo claro/escuro">Modo Claro/Escuro</button>
-        <!-- botão discreto; abre painel com export/import sem poluir a UI principal -->
-        <button id="optionsBtn" class="camouBtn" title="Opções">⚙</button>
+        <button id="darkToggle" class="icon-btn" title="Alternar modo claro/escuro">🌙</button>
+        <button id="optionsBtn" class="icon-btn" title="Configurações">⚙️</button>
       </div>
     </header>
 
-    <!--
-      Tabs (meses): container vazio preenchido por JavaScript.
-      O script cria 12 botões (Jan..Dez) e aplica a classe `active` no mês escolhido.
-    -->
+    <!-- ==================== ABAS DOS MESES ==================== -->
+    <!-- As abas serão preenchidas dinamicamente pelo JavaScript -->
     <div class="tabs" id="tabs"></div>
 
-    <!--
-      Controles principais:
-      - Seletor de cor (`#colorPicker`) define a cor usada ao marcar células.
-      - Campo `#habitNameInput` + `#addHabitBtn` adicionam um novo hábito.
-    -->
+    <!-- ==================== CONTROLES PRINCIPAIS ==================== -->
     <div class="controls">
-      <div class="color">
-        <label for="colorPicker">Cor:</label>
-        <!-- input type=color oferece seletor RGB/HEX no browser -->
-        <input type="color" id="colorPicker" title="Escolha a cor das marcações">
-        <span id="colorValue" style="font-size:13px;color:#374151"></span>
+      <!-- Seletor de cores compacto (botão + preview) -->
+      <div class="color-selector">
+        <button id="colorPickerBtn" class="icon-btn" title="Escolher cor do hábito">🎨</button>
+        <input type="color" id="colorPicker" style="display: none;">
+        <span id="colorPreview" class="color-preview"></span>
       </div>
 
-      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        <!-- Inserção de novo hábito -->
+      <!-- Adicionar novo hábito -->
+      <div class="add-habit">
         <input id="habitNameInput" type="text" placeholder="Nome do hábito">
         <button id="addHabitBtn">Adicionar</button>
       </div>
     </div>
-
-    <!--
-      Tabela principal (habitTable):
-      - As colunas representam os dias do mês (1..N) calculados em JS.
-      - As linhas representam os hábitos cadastrados.
-      - Cada célula é clicável e armazenará uma marcação no `state`.
-      - A coluna final contém o botão "Remover" para excluir o hábito.
-    -->
+    
+    <!-- ==================== TABELA PRINCIPAL ==================== -->
     <div class="table-wrap">
       <table id="habitTable">
-        <!-- Cabeçalho e linhas são gerados via JavaScript -->
+        <!-- Cabeçalho e linhas gerados pelo JavaScript -->
       </table>
     </div>
 
-    <!--
-      Painel de opções (camuflado):
-      - `#exportBtn` baixa um arquivo JSON com o estado atual.
-      - `#importFileInput` permite selecionar um arquivo JSON para importar.
-      - Por segurança, a importação solicita confirmação e substitui os dados existentes.
-      - O painel é exibido/ocultado pelo botão `#optionsBtn` (ícone ⚙).
-    -->
-    <div id="optionsPanel" class="optionsPanel" aria-hidden="true">
-      <button id="exportBtn" class="ghost">Exportar JSON</button>
-      <label style="font-size:13px;color:#374151">Importar JSON:</label>
-      <input id="importFileInput" type="file" accept="application/json">
-      <div style="font-size:12px;color:#6b7280;margin-top:6px">Importar substitui os dados atuais.</div>
+    <!-- ==================== MENU DE CONFIGURAÇÕES (DROPDOWN) ==================== -->
+    <div id="optionsPanel" class="dropdown-menu">
+      <button id="exportBtn">📤 Exportar JSON</button>
+      <label for="importFileInput" class="import-label">📥 Importar JSON</label>
+      <input type="file" id="importFileInput" accept=".json" style="display: none;">
     </div>
 
-    <!-- Footer com resumo simples -->
+    <!-- ==================== RODAPÉ ==================== -->
     <div class="footer">
       <div id="summary">--</div>
-      <div style="font-size:13px;color:#6b7280">Salvo localmente no navegador</div>
+      <div class="save-status">Salvo localmente no navegador</div>
     </div>
   </div>
 
-    <!-- Script principal (separado): contém toda a lógica da app.
-      Observação de aprendizado: separar JS/CSS do HTML melhora organização
-      e facilita entender cada camada (estrutura, apresentação, comportamento).
-    -->
-    <script src="habit-tracker.js" defer></script>
+  <script src="habit-tracker.js" defer></script>
 </body>
 </html>

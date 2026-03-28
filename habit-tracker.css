@@ -1,4 +1,6 @@
-/* ========== RESET BÁSICO ========== */
+/* ============================================================
+   RESET E CONFIGURAÇÕES GLOBAIS
+   ============================================================ */
 * {
   box-sizing: border-box;
   font-family: Inter, 'Segoe UI', Arial, Helvetica, sans-serif;
@@ -14,290 +16,421 @@ body {
   background: #f5f7fb;
   color: #111;
   padding: 10px;
-  font-size: 14px; /* base reduzida */
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
 }
 
-/* ========== CONTAINER PRINCIPAL ========== */
+/* ============================================================
+   CONTAINER PRINCIPAL
+   ============================================================ */
 .app {
   max-width: 100%;
   background: #fff;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 6px 20px rgba(16, 24, 40, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  transition: background 0.2s, box-shadow 0.2s;
 }
 
-/* ========== CABEÇALHO ========== */
+/* ============================================================
+   CABEÇALHO
+   ============================================================ */
 header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
 }
 
 .top-right {
   display: flex;
-  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  align-items: center;
 }
+
+/* Navegação de anos */
 .year-nav {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 8px;
 }
+
 .year-btn {
   background: #eef2ff;
   border: none;
   padding: 4px 10px;
+  border-radius: 30px;
   cursor: pointer;
-  border-radius: 6px;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  transition: background 0.2s;
 }
+.year-btn:hover {
+  background: #dfe6f5;
+}
+
 .current-year {
-  font-weight: bold;
+  font-weight: 600;
+  font-size: 1.1rem;
   min-width: 60px;
   text-align: center;
 }
 
-/* ========== TABS (MESES) ========== */
+.month-year-display {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   ABAS DOS MESES
+   ============================================================ */
 .tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  justify-content: center;
 }
 
 .tab {
-  padding: 6px 10px; /* antes 8px 12px */
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 30px;
   background: #eef2ff;
   color: #1f2937;
   cursor: pointer;
-  border: 1px solid transparent;
-  white-space: nowrap;
-  transition: 0.2s;
-  font-size: 0.85rem; /* fonte um pouco menor */
+  border: none;
+  font-size: 0.85rem;
+  transition: all 0.2s;
 }
-
 .tab.active {
   background: #4f46e5;
   color: #fff;
 }
 
-/* ========== CONTROLES ========== */
+/* ============================================================
+   CONTROLES (seletor de cor e adicionar hábito)
+   ============================================================ */
 .controls {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
-.controls .color {
+/* Seletor de cores minimalista */
+.color-selector {
   display: flex;
   align-items: center;
   gap: 8px;
+  background: #f0f2f5;
+  padding: 4px 12px;
+  border-radius: 40px;
 }
 
-label {
-  font-size: 13px;
-  color: #374151;
+.color-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  background: #10b981;
+  transition: background 0.1s;
 }
 
-input[type="text"] {
-  padding: 6px 8px; /* antes 8px */
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  min-width: 180px;
-  flex: 1 1 auto;
-  font-size: 0.9rem;
-}
-
-button {
-  padding: 6px 10px; /* antes 8px 12px */
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: #111827;
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-button.ghost {
+/* Botão de ícone genérico */
+.icon-btn {
   background: transparent;
-  color: #374151;
-  border: 1px solid #e5e7eb;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
-/* ========== ÁREA DA TABELA (COM ROLAGEM HORIZONTAL) ========== */
+/* Campo e botão de adicionar hábito */
+.add-habit {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+#habitNameInput {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 40px;
+  font-size: 0.9rem;
+  min-width: 180px;
+  background: #fff;
+  transition: border 0.2s;
+}
+#habitNameInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+}
+#addHabitBtn {
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+#addHabitBtn:hover {
+  background: #2d3a5e;
+}
+
+/* ============================================================
+   TABELA – CÉLULAS QUADRADAS E ALINHAMENTO PERFEITO
+   ============================================================ */
 .table-wrap {
   overflow-x: auto;
-  border: 1px solid #e6e9f2;
-  border-radius: 8px;
-  margin-top: 8px;
+  border-radius: 16px;
+  border: 1px solid #eef2f7;
+  background: white;
 }
 
-/* Tabela – sem largura fixa mínima, adapta ao conteúdo */
 table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 0.85rem; /* fonte da tabela reduzida */
+  font-size: 0.85rem;
 }
 
-/* Estilo das células – padding reduzido */
 th, td {
   border: 1px solid #eef2f7;
-  padding: 6px 4px; /* antes 10px 8px */
   text-align: center;
-  white-space: nowrap;
+  vertical-align: middle;
 }
 
-/* Primeira coluna (nome do hábito) fixa ao rolar horizontalmente */
-th:first-child, td:first-child {
-  background: #fafafa;
-  font-weight: bold;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  padding: 6px 8px; /* um pouco mais de espaço para o nome */
-  text-align: left;
+/* Cabeçalho dos dias – quadrado */
+th:not(:first-child) {
+  width: 44px;
+  height: 44px;
+  font-weight: 500;
 }
 
-/* Para manter o fundo da primeira coluna consistente */
-td:first-child {
-  background: #fff;
-}
-body.dark td:first-child {
-  background: #121212;
-}
-
-/* Células dos dias */
+/* Células de dia – quadradas */
 td.dayCell {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   cursor: pointer;
-  min-width: 32px; /* antes 40px */
-  width: 32px;     /* largura fixa opcional */
+  transition: background 0.1s;
+  background: white;
 }
-
 td.dayCell.marked {
   color: #fff;
 }
 
-/* ========== RODAPÉ ========== */
+/* Primeira coluna (nome do hábito) – fixa ao rolar horizontalmente */
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fafafa;
+  font-weight: 600;
+  text-align: left;
+  padding: 0 12px;
+  min-width: 140px;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Coluna do botão remover – compacta */
+td:last-child {
+  width: 60px;
+  padding: 0;
+  text-align: center;
+}
+.remove-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #999;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.remove-btn:hover {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* ============================================================
+   MENU DROPDOWN (CONFIGURAÇÕES)
+   ============================================================ */
+.dropdown-menu {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow: hidden;
+}
+.dropdown-menu.visible {
+  display: flex;
+}
+.dropdown-menu button,
+.dropdown-menu .import-label {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+  color: #111;
+  font-weight: normal;
+}
+.dropdown-menu button:hover,
+.dropdown-menu .import-label:hover {
+  background: #f0f0f0;
+}
+
+/* ============================================================
+   RODAPÉ
+   ============================================================ */
 .footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #eef2f7;
+  font-size: 0.85rem;
+  color: #5a6e8a;
+  text-align: center;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 8px;
-  border-top: 1px solid #ddd;
-  color: #374151;
-  font-size: 0.85rem;
+}
+.save-status {
+  font-size: 0.75rem;
 }
 
-/* ========== MODO ESCURO ========== */
-body.dark{
-  background: #000;
-  color: #fafafa; 
+/* ============================================================
+   MODO ESCURO – todas as adaptações
+   ============================================================ */
+body.dark {
+  background: #0a0c10;
+  color: #eee;
 }
-
 body.dark .app {
   background: #121212;
   box-shadow: none;
-  border: 1px solid #222;
+  border: 1px solid #2a2a2a;
 }
-
-/* Botões de navegação de ano no modo escuro */
-body.dark .year-nav .year-btn {
-  background: #2c2c2c;
-  color: #ddd;
-  border-color: #444;
-}
-body.dark .year-nav .year-btn:hover {
-  background: #3c3c3c;
-  color: #fff;
-}
-body.dark .current-year {
-  color: #ddd;
-}
-
 body.dark .tab {
-  background: transparent;
-  color: #ddd;
+  background: #2a2a2a;
+  color: #ccc;
 }
-
 body.dark .tab.active {
-  background: #405de6;
-  color: #fff;
+  background: #4f46e5;
+  color: white;
 }
-
-body.dark button.ghost {
+body.dark .year-btn {
+  background: #2a2a2a;
   color: #ccc;
-  border-color: #333;
 }
-
-body.dark input[type="text"] {
-  background: #1c1c1c;
-  color: #ccc;
-  border-color: #333;
+body.dark .year-btn:hover {
+  background: #3a3a3a;
 }
-
+body.dark .color-selector {
+  background: #2a2a2a;
+}
+body.dark .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+body.dark #habitNameInput {
+  background: #2a2a2a;
+  border-color: #444;
+  color: #eee;
+}
+body.dark #habitNameInput:focus {
+  border-color: #4f46e5;
+}
+body.dark #addHabitBtn {
+  background: #4f46e5;
+}
 body.dark .table-wrap {
-  border-color: #333;
-}
-
-body.dark table {
+  border-color: #2a2a2a;
   background: #121212;
 }
-
-body.dark th, 
-body.dark td {
-  border-color: #3f3d3d;
+body.dark th, body.dark td {
+  border-color: #2a2a2a;
 }
-
-body.dark th:first-child,
-body.dark td:first-child {
-  background: #1c1c1c;
+body.dark th:first-child, body.dark td:first-child {
+  background: #1a1a1a;
 }
-
+/* Células não marcadas: fundo escuro */
+body.dark td.dayCell {
+  background: #121212;
+}
+/* Células marcadas mantêm a cor do hábito via inline style */
+body.dark .dropdown-menu {
+  background: #1e1e1e;
+  border: 1px solid #333;
+}
+body.dark .dropdown-menu button,
+body.dark .dropdown-menu .import-label {
+  color: #ddd;
+}
+body.dark .dropdown-menu button:hover,
+body.dark .dropdown-menu .import-label:hover {
+  background: #2c2c2c;
+}
 body.dark .footer {
-  color: #bbb;
-  border-top-color: #333;
+  border-top-color: #2a2a2a;
+  color: #aaa;
+}
+body.dark .save-status {
+  color: #888;
 }
 
-/* ========== RESPONSIVIDADE ========== */
-@media (max-width: 600px) {
-  body {
-    padding: 5px;
-    font-size: 13px;
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+@media (max-width: 700px) {
+  th:not(:first-child), td.dayCell {
+    width: 34px;
+    height: 34px;
   }
-  .app {
-    padding: 12px;
+  th:first-child, td:first-child {
+    min-width: 100px;
   }
-  h1 {
-    font-size: 1.3rem;
+  td:last-child {
+    width: 50px;
   }
-  .tab {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-  }
-  th, td {
-    padding: 4px 2px;
-  }
-  td.dayCell {
-    min-width: 28px;
-    width: 28px;
-  }
-  .footer {
-    flex-direction: column;
-    text-align: center;
+  #habitNameInput {
+    min-width: 120px;
   }
 }

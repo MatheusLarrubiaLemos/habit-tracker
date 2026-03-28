@@ -1,43 +1,41 @@
-// Ano atual (usado como ano inicial, mas agora é mutável)
+// ============================================================
+// CONFIGURAÇÕES INICIAIS E CONSTANTES
+// ============================================================
 const CURRENT_YEAR = new Date().getFullYear();
-
-// Nomes dos meses
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const STORAGE_KEY = 'habitTrackerData_v1';   // chave para localStorage
 
-// Chave usada para salvar/recuperar dados no localStorage
-const STORAGE_KEY = 'habitTrackerData_v2'; // Mudei a versão para evitar conflito
-
-// Estado global
+// Estado global da aplicação
 let state = {
-  year: CURRENT_YEAR,               // ano atual exibido (mutável)
-  activeMonth: new Date().getMonth(),
-  color: '#10b981',
-  darkMode: false,
-  habits: []
-}
+  year: CURRENT_YEAR,           // ano exibido atualmente
+  activeMonth: new Date().getMonth(), // mês ativo (0-11)
+  color: '#10b981',             // cor atual do seletor (usada para novos hábitos e alteração de cor)
+  darkMode: false,              // modo escuro ativo?
+  habits: []                    // lista de hábitos: cada um tem id, name, color, marks { chave: true }
+};
 
-// Gera um id simples
-function genId(){
+// ============================================================
+// FUNÇÕES AUXILIARES
+// ============================================================
+function genId() {
   return 'h' + Math.random().toString(36).slice(2,9);
 }
 
-// Retorna quantidade de dias de um mês/ano
-function daysInMonth(year, monthIndex){
+function daysInMonth(year, monthIndex) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-// Chave de marcação agora inclui o ano
-function markKey(year, monthIndex, day){
+function markKey(year, monthIndex, day) {
   return `${year}-${monthIndex}-${day}`;
 }
 
-// -----------------------
-// Persistência (localStorage)
-// -----------------------
-function saveState(){
-  try{
+// ============================================================
+// PERSISTÊNCIA (localStorage)
+// ============================================================
+function saveState() {
+  try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }catch(e){
+  } catch(e) {
     console.error('Erro ao salvar no localStorage', e);
   }
 }
@@ -49,93 +47,95 @@ function loadState() {
       const parsed = JSON.parse(raw);
       state = Object.assign(state, parsed);
 
-      // MIGRAÇÃO DE DADOS ANTIGOS (versão anterior, sem ano)
-      // Se há hábitos com marcas no formato antigo ("mes-dia") e não há marcas com ano,
-      // vamos convertê-las usando o ano atual (state.year).
-      let needsMigration = false;
+      // Migração de dados antigos (formato sem ano) para o novo formato
+      let needsSave = false;
       state.habits.forEach(habit => {
         if (habit.marks) {
-          // Verifica se existe alguma chave que não contém ano (ou seja, não começa com dígitos e traço)
-          const hasOldFormat = Object.keys(habit.marks).some(key => !/^\d{4}-\d+-\d+$/.test(key));
+          const hasOldFormat = Object.keys(habit.marks).some(k => !/^\d{4}-\d+-\d+$/.test(k));
           if (hasOldFormat) {
-            needsMigration = true;
             const newMarks = {};
             Object.keys(habit.marks).forEach(oldKey => {
-              // oldKey é "mês-dia"
               const [month, day] = oldKey.split('-').map(Number);
               if (!isNaN(month) && !isNaN(day)) {
                 const newKey = markKey(state.year, month, day);
-                // O valor antigo pode ser booleano ou string (cor)
-                newMarks[newKey] = typeof habit.marks[oldKey] === 'string' ? true : habit.marks[oldKey];
+                newMarks[newKey] = true;
               }
             });
             habit.marks = newMarks;
+            needsSave = true;
           }
         }
-        // Garante que cada hábito tenha uma cor
         if (!habit.color) habit.color = state.color;
       });
-      if (needsMigration) saveState();
-
-      // Se algum hábito ainda não tem cor, define
-      state.habits.forEach(habit => {
-        if (!habit.color) habit.color = state.color;
-      });
+      if (needsSave) saveState();
     }
   } catch(e) {
     console.error('Erro ao ler localStorage', e);
   }
 }
 
-// -----------------------
-// Referências ao DOM
-// -----------------------
+// ============================================================
+// ELEMENTOS DO DOM (referências)
+// ============================================================
 const tabsEl = document.getElementById('tabs');
 const tableEl = document.getElementById('habitTable');
 const colorPicker = document.getElementById('colorPicker');
-const colorValue = document.getElementById('colorValue');
+const colorPickerBtn = document.getElementById('colorPickerBtn');
+const colorPreview = document.getElementById('colorPreview');
 const addHabitBtn = document.getElementById('addHabitBtn');
 const habitNameInput = document.getElementById('habitNameInput');
 const summaryEl = document.getElementById('summary');
-const monthYearEl = document.getElementById('monthYear');
+const monthYearDiv = document.getElementById('monthYear');
 const darkToggle = document.getElementById('darkToggle');
 const optionsBtn = document.getElementById('optionsBtn');
 const optionsPanel = document.getElementById('optionsPanel');
 const exportBtn = document.getElementById('exportBtn');
 const importFileInput = document.getElementById('importFileInput');
-
-// Elementos de navegação de ano (devem existir no HTML)
 const prevYearBtn = document.getElementById('prevYearBtn');
 const nextYearBtn = document.getElementById('nextYearBtn');
 const currentYearSpan = document.getElementById('currentYear');
 
-// -----------------------
-// Navegação por ano
-// -----------------------
+// ============================================================
+// NAVEGAÇÃO POR ANO
+// ============================================================
 function setYear(newYear) {
   state.year = newYear;
   saveState();
-  render(); // recarrega tudo
+  render();           // recarrega toda a interface com o novo ano
 }
-
 function prevYear() {
   setYear(state.year - 1);
 }
-
 function nextYear() {
   setYear(state.year + 1);
 }
 
-// -----------------------
-// Renderização
-// -----------------------
-function renderTabs(){
+// ============================================================
+// SELETOR DE CORES (DISCRETO)
+// ============================================================
+function initColorPicker() {
+  // Ao clicar no botão, abre o input nativo de cor
+  colorPickerBtn.addEventListener('click', () => colorPicker.click());
+  // Quando a cor muda no seletor, atualiza o estado e o preview
+  colorPicker.addEventListener('input', (e) => {
+    state.color = e.target.value;
+    colorPreview.style.backgroundColor = state.color;
+    saveState();
+  });
+  // Sincroniza o preview com a cor atual do estado
+  colorPreview.style.backgroundColor = state.color;
+}
+
+// ============================================================
+// RENDERIZAÇÃO DAS ABAS (meses)
+// ============================================================
+function renderTabs() {
   tabsEl.innerHTML = '';
-  MONTHS.forEach((m, idx) => {
+  MONTHS.forEach((monthName, idx) => {
     const btn = document.createElement('button');
     btn.className = 'tab' + (idx === state.activeMonth ? ' active' : '');
-    btn.textContent = m.slice(0, 3);
-    btn.title = m;
+    btn.textContent = monthName.slice(0, 3);  // Abreviação: Jan, Fev, etc.
+    btn.title = monthName;
     btn.addEventListener('click', () => {
       state.activeMonth = idx;
       saveState();
@@ -145,103 +145,63 @@ function renderTabs(){
   });
 }
 
-function renderHeader(){
-  monthYearEl.textContent = `${MONTHS[state.activeMonth]} ${state.year}`;
+// ============================================================
+// RENDERIZAÇÃO DO CABEÇALHO (mês/ano)
+// ============================================================
+function renderHeader() {
+  monthYearDiv.textContent = `${MONTHS[state.activeMonth]} ${state.year}`;
   if (currentYearSpan) currentYearSpan.textContent = state.year;
 }
 
-function renderTable(){
+// ============================================================
+// RENDERIZAÇÃO DA TABELA (hábitos x dias)
+// ============================================================
+function renderTable() {
   tableEl.innerHTML = '';
-
   const year = state.year;
   const monthIndex = state.activeMonth;
   const days = daysInMonth(year, monthIndex);
 
-  // Cabeçalho
+  // ---------- Cabeçalho ----------
   const thead = document.createElement('thead');
-  const hrow = document.createElement('tr');
+  const headerRow = document.createElement('tr');
   const thHabit = document.createElement('th');
-  thHabit.className = 'habit';
   thHabit.textContent = 'Hábitos';
-  hrow.appendChild(thHabit);
-  for (let d = 1; d <= days; d++){
+  headerRow.appendChild(thHabit);
+  for (let d = 1; d <= days; d++) {
     const th = document.createElement('th');
     th.textContent = String(d).padStart(2, '0');
-    hrow.appendChild(th);
+    headerRow.appendChild(th);
   }
   const thRemove = document.createElement('th');
   thRemove.textContent = '';
-  hrow.appendChild(thRemove);
-  thead.appendChild(hrow);
+  headerRow.appendChild(thRemove);
+  thead.appendChild(headerRow);
   tableEl.appendChild(thead);
 
-  // Corpo
+  // ---------- Corpo (linhas de hábitos) ----------
   const tbody = document.createElement('tbody');
   state.habits.forEach(habit => {
-    const tr = document.createElement('tr');
+    const row = document.createElement('tr');
 
-    // Coluna do nome (com círculo de cor e ações)
+    // Coluna do nome do hábito (clique simples altera cor, duplo renomeia)
     const tdName = document.createElement('td');
     tdName.className = 'habitName';
+    tdName.textContent = habit.name;
     tdName.style.cursor = 'pointer';
-    tdName.style.display = 'flex';
-    tdName.style.alignItems = 'center';
-    tdName.style.gap = '8px';
     tdName.title = 'Clique simples: alterar cor | Duplo clique: renomear';
 
-    const colorIndicator = document.createElement('span');
-    colorIndicator.style.display = 'inline-block';
-    colorIndicator.style.width = '16px';
-    colorIndicator.style.height = '16px';
-    colorIndicator.style.borderRadius = '50%';
-    colorIndicator.style.backgroundColor = habit.color;
-    colorIndicator.style.border = '1px solid #ccc';
-    colorIndicator.style.flexShrink = '0';
-
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = habit.name;
-
-    tdName.appendChild(colorIndicator);
-    tdName.appendChild(nameSpan);
-
     let clickTimer = null;
-    tdName.addEventListener('click', (e) => {
+    tdName.addEventListener('click', () => {
       if (clickTimer) clearTimeout(clickTimer);
       clickTimer = setTimeout(() => {
-        habit.color = state.color;
+        habit.color = state.color;       // aplica a cor atual do seletor
         saveState();
-        colorIndicator.style.backgroundColor = habit.color;
-        // feedback visual
-        const originalBorder = colorIndicator.style.border;
-        colorIndicator.style.border = '2px solid gold';
-        setTimeout(() => {
-          colorIndicator.style.border = originalBorder;
-        }, 300);
-        // toast
-        const toast = document.createElement('div');
-        toast.textContent = `Cor alterada para ${habit.color.toUpperCase()}`;
-        toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.left = '20px';
-        toast.style.backgroundColor = '#333';
-        toast.style.color = '#fff';
-        toast.style.padding = '8px 12px';
-        toast.style.borderRadius = '4px';
-        toast.style.fontSize = '14px';
-        toast.style.zIndex = '1000';
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.2s';
-        document.body.appendChild(toast);
-        setTimeout(() => { toast.style.opacity = '1'; }, 10);
-        setTimeout(() => {
-          toast.style.opacity = '0';
-          setTimeout(() => toast.remove(), 300);
-        }, 1500);
+        renderTable();                  // recarrega tabela para aplicar nova cor
         clickTimer = null;
       }, 200);
     });
-
-    tdName.addEventListener('dblclick', (e) => {
+    tdName.addEventListener('dblclick', () => {
       if (clickTimer) {
         clearTimeout(clickTimer);
         clickTimer = null;
@@ -254,7 +214,7 @@ function renderTable(){
       tdName.innerHTML = '';
       tdName.appendChild(input);
       input.focus();
-      function finish(){
+      function finish() {
         const v = input.value.trim();
         if (v) renameHabit(habit.id, v);
         else alert('Nome vazio não permitido');
@@ -262,49 +222,46 @@ function renderTable(){
       input.addEventListener('blur', finish);
       input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
     });
+    row.appendChild(tdName);
 
-    tr.appendChild(tdName);
-
-    // Células de dias
-    for (let d = 1; d <= days; d++){
+    // Células dos dias
+    for (let d = 1; d <= days; d++) {
       const td = document.createElement('td');
       td.className = 'dayCell';
-      td.dataset.habitId = habit.id;
-      td.dataset.day = d;
-
       const key = markKey(year, monthIndex, d);
-      if (habit.marks && habit.marks[key]){
-        td.style.backgroundColor = habit.color;
+      if (habit.marks && habit.marks[key]) {
+        td.style.backgroundColor = habit.color;  // aplica a cor fixa do hábito
         td.classList.add('marked');
       } else {
-        td.style.backgroundColor = '';
+        td.style.backgroundColor = '';           // remove inline, permite CSS do modo escuro
         td.classList.remove('marked');
       }
-
-      td.addEventListener('click', () => {
-        toggleMark(habit.id, year, monthIndex, d);
-      });
-      tr.appendChild(td);
+      td.addEventListener('click', () => toggleMark(habit.id, year, monthIndex, d));
+      row.appendChild(td);
     }
 
-    // Ações: Remover
-    const tdActions = document.createElement('td');
-    const btnRemove = document.createElement('button');
-    btnRemove.className = 'ghost';
-    btnRemove.textContent = 'Remover';
-    btnRemove.addEventListener('click', () => {
-      if (confirm(`Remover o hábito "${habit.name}"?`)) removeHabit(habit.id);
+    // Botão remover (ícone)
+    const tdRemove = document.createElement('td');
+    const removeBtn = document.createElement('button');
+    removeBtn.innerHTML = '🗑️';
+    removeBtn.className = 'remove-btn';
+    removeBtn.title = 'Remover hábito';
+    removeBtn.addEventListener('click', () => {
+      if (confirm(`Remover "${habit.name}"?`)) removeHabit(habit.id);
     });
-    tdActions.appendChild(btnRemove);
-    tr.appendChild(tdActions);
+    tdRemove.appendChild(removeBtn);
+    row.appendChild(tdRemove);
 
-    tbody.appendChild(tr);
+    tbody.appendChild(row);
   });
   tableEl.appendChild(tbody);
   renderSummary();
 }
 
-function renderSummary(){
+// ============================================================
+// RESUMO (contagem de marcações)
+// ============================================================
+function renderSummary() {
   const year = state.year;
   const monthIndex = state.activeMonth;
   let total = 0;
@@ -313,23 +270,26 @@ function renderSummary(){
       if (k.startsWith(`${year}-${monthIndex}-`)) total++;
     });
   });
-  summaryEl.textContent = `Marcações no mês: ${total} (${state.habits.length} hábitos)`;
+  summaryEl.textContent = `✔️ ${total} marcações este mês · ${state.habits.length} hábitos`;
 }
 
-function render(){
+// ============================================================
+// FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO
+// ============================================================
+function render() {
   renderTabs();
   renderHeader();
   renderTable();
-  colorPicker.value = state.color;
-  colorValue.textContent = state.color.toUpperCase();
-  if (state.darkMode) document.body.classList.add('dark'); else document.body.classList.remove('dark');
+  // Aplica classe dark mode no body conforme o estado
+  if (state.darkMode) document.body.classList.add('dark');
+  else document.body.classList.remove('dark');
 }
 
-// -----------------------
-// Ações do usuário
-// -----------------------
-function addHabit(name){
-  if (!name || !name.trim()) return alert('Digite um nome para o hábito');
+// ============================================================
+// AÇÕES DOS HÁBITOS (CRUD)
+// ============================================================
+function addHabit(name) {
+  if (!name?.trim()) return alert('Digite um nome');
   const habit = { id: genId(), name: name.trim(), marks: {} };
   state.habits.push(habit);
   saveState();
@@ -337,111 +297,117 @@ function addHabit(name){
   habitNameInput.value = '';
 }
 
-function removeHabit(id){
+function removeHabit(id) {
   state.habits = state.habits.filter(h => h.id !== id);
   saveState();
   render();
 }
 
-function renameHabit(id, newName){
+function renameHabit(id, newName) {
   const h = state.habits.find(x => x.id === id);
-  if (!h) return;
-  h.name = newName;
-  saveState();
-  renderTable();
+  if (h) { h.name = newName; saveState(); renderTable(); }
 }
 
-function toggleMark(habitId, year, monthIndex, day){
+function toggleMark(habitId, year, monthIndex, day) {
   const habit = state.habits.find(h => h.id === habitId);
   if (!habit) return;
   const key = markKey(year, monthIndex, day);
   habit.marks = habit.marks || {};
-
-  if (!habit.color) {
-    habit.color = state.color;
-  }
-
+  if (!habit.color) habit.color = state.color;   // define cor se ainda não tiver
   if (habit.marks[key]) {
     delete habit.marks[key];
   } else {
     habit.marks[key] = true;
   }
   saveState();
-  renderTable();
+  renderTable();   // atualiza apenas a tabela (mais rápido)
 }
 
-// -----------------------
-// Export / Import
-// -----------------------
-function exportData(){
+// ============================================================
+// EXPORTAR / IMPORTAR JSON
+// ============================================================
+function exportData() {
   const data = JSON.stringify(state, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `habit-tracker-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `habit-tracker-${state.year}-${MONTHS[state.activeMonth]}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
 
-function handleImportFile(file){
+function handleImportFile(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    try{
+    try {
       const parsed = JSON.parse(e.target.result);
-      if (!confirm('Deseja substituir os dados atuais pelos dados importados? Isso sobrescreverá tudo.')) return;
-      state = Object.assign({ year: CURRENT_YEAR, activeMonth: new Date().getMonth(), color: '#10b981', darkMode: false, habits: [] }, parsed);
-      state.habits = state.habits || [];
-      state.habits.forEach(habit => {
-        if (!habit.color) habit.color = state.color;
-      });
+      if (!confirm('Substituir os dados atuais?')) return;
+      // Mescla com defaults para garantir que todas as propriedades existam
+      state = Object.assign({
+        year: CURRENT_YEAR,
+        activeMonth: new Date().getMonth(),
+        color: '#10b981',
+        darkMode: false,
+        habits: []
+      }, parsed);
+      state.habits.forEach(h => { if (!h.color) h.color = state.color; });
       saveState();
       render();
-      alert('Importação concluída.');
-    }catch(err){
-      alert('Arquivo inválido: ' + err.message);
+      alert('Importado com sucesso!');
+    } catch(err) {
+      alert('Arquivo inválido');
     }
   };
   reader.readAsText(file);
 }
 
-// -----------------------
-// Painel de opções
-// -----------------------
-function toggleOptionsPanel(){
+// ============================================================
+// CONTROLE DO MENU DROPDOWN (CONFIGURAÇÕES)
+// ============================================================
+function toggleOptionsPanel() {
   optionsPanel.classList.toggle('visible');
 }
-
-// -----------------------
-// Eventos
-// -----------------------
-colorPicker.addEventListener('input', (e) => {
-  state.color = e.target.value;
-  colorValue.textContent = state.color.toUpperCase();
-  saveState();
+// Fecha o dropdown se clicar fora dele
+document.addEventListener('click', (e) => {
+  if (optionsPanel && optionsBtn && !optionsBtn.contains(e.target) && !optionsPanel.contains(e.target)) {
+    optionsPanel.classList.remove('visible');
+  }
 });
 
-addHabitBtn.addEventListener('click', () => { addHabit(habitNameInput.value); });
+// ============================================================
+// EVENT LISTENERS (INTERAÇÃO DO USUÁRIO)
+// ============================================================
+addHabitBtn.addEventListener('click', () => addHabit(habitNameInput.value));
 habitNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addHabit(habitNameInput.value); });
+darkToggle.addEventListener('click', () => {
+  state.darkMode = !state.darkMode;
+  saveState();
+  render();   // recarrega para aplicar a classe dark no body
+});
+optionsBtn.addEventListener('click', toggleOptionsPanel);
+exportBtn.addEventListener('click', () => {
+  exportData();
+  toggleOptionsPanel();   // opcional: fecha o menu após exportar
+});
+importFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleImportFile(file);
+  e.target.value = '';
+  toggleOptionsPanel();   // fecha menu após importar
+});
+prevYearBtn?.addEventListener('click', prevYear);
+nextYearBtn?.addEventListener('click', nextYear);
 
-darkToggle.addEventListener('click', () => { state.darkMode = !state.darkMode; saveState(); render(); });
-
-optionsBtn.addEventListener('click', () => { toggleOptionsPanel(); });
-exportBtn.addEventListener('click', () => { exportData(); });
-importFileInput.addEventListener('change', (e) => { const f = e.target.files[0]; if (f) handleImportFile(f); e.target.value = ''; });
-
-// Botões de ano
-if (prevYearBtn) prevYearBtn.addEventListener('click', prevYear);
-if (nextYearBtn) nextYearBtn.addEventListener('click', nextYear);
-
-// -----------------------
-// Inicialização
-// -----------------------
-(function init(){
-  loadState();
+// ============================================================
+// INICIALIZAÇÃO DA APLICAÇÃO
+// ============================================================
+(function init() {
+  loadState();                    // carrega dados salvos
   if (!state.color) state.color = '#10b981';
-  render();
+  initColorPicker();             // configura o seletor de cores discreto
+  render();                      // desenha a interface
 })();
