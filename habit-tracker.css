@@ -47,6 +47,24 @@ h1 {
   gap: 10px;
   flex-wrap: wrap;
 }
+.year-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.year-btn {
+  background: #eef2ff;
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 1.2rem;
+}
+.current-year {
+  font-weight: bold;
+  min-width: 60px;
+  text-align: center;
+}
 
 /* ========== TABS (MESES) ========== */
 .tabs {
@@ -186,15 +204,29 @@ td.dayCell.marked {
 }
 
 /* ========== MODO ESCURO ========== */
-body.dark {
+body.dark{
   background: #000;
-  color: #fafafa;
+  color: #fafafa; 
 }
 
 body.dark .app {
   background: #121212;
   box-shadow: none;
   border: 1px solid #222;
+}
+
+/* Botões de navegação de ano no modo escuro */
+body.dark .year-nav .year-btn {
+  background: #2c2c2c;
+  color: #ddd;
+  border-color: #444;
+}
+body.dark .year-nav .year-btn:hover {
+  background: #3c3c3c;
+  color: #fff;
+}
+body.dark .current-year {
+  color: #ddd;
 }
 
 body.dark .tab {
