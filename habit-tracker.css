@@ -13,12 +13,13 @@ body {
   min-height: 100vh;
   background: #f5f7fb;
   color: #111;
-  padding: 10px;            /* espaço nas bordas */
+  padding: 10px;
+  font-size: 14px; /* base reduzida */
 }
 
 /* ========== CONTAINER PRINCIPAL ========== */
 .app {
-  max-width: 100%;          /* ocupa toda a largura disponível */
+  max-width: 100%;
   background: #fff;
   border-radius: 10px;
   padding: 16px;
@@ -56,7 +57,7 @@ h1 {
 }
 
 .tab {
-  padding: 8px 12px;
+  padding: 6px 10px; /* antes 8px 12px */
   border-radius: 6px;
   background: #eef2ff;
   color: #1f2937;
@@ -64,6 +65,7 @@ h1 {
   border: 1px solid transparent;
   white-space: nowrap;
   transition: 0.2s;
+  font-size: 0.85rem; /* fonte um pouco menor */
 }
 
 .tab.active {
@@ -92,20 +94,22 @@ label {
 }
 
 input[type="text"] {
-  padding: 8px;
+  padding: 6px 8px; /* antes 8px */
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  min-width: 200px;
+  min-width: 180px;
   flex: 1 1 auto;
+  font-size: 0.9rem;
 }
 
 button {
-  padding: 8px 12px;
+  padding: 6px 10px; /* antes 8px 12px */
   border-radius: 6px;
   border: 1px solid transparent;
   background: #111827;
   color: #fff;
   cursor: pointer;
+  font-size: 0.85rem;
 }
 
 button.ghost {
@@ -116,25 +120,25 @@ button.ghost {
 
 /* ========== ÁREA DA TABELA (COM ROLAGEM HORIZONTAL) ========== */
 .table-wrap {
-  overflow-x: auto;         /* barra de rolagem horizontal aqui, se necessário */
+  overflow-x: auto;
   border: 1px solid #e6e9f2;
   border-radius: 8px;
   margin-top: 8px;
 }
 
-/* Tabela – largura mínima para não espremer as colunas */
+/* Tabela – sem largura fixa mínima, adapta ao conteúdo */
 table {
   border-collapse: collapse;
-  min-width: 800px;         /* ajuste conforme desejar (mais largo = mais colunas visíveis) */
   width: 100%;
+  font-size: 0.85rem; /* fonte da tabela reduzida */
 }
 
-/* Estilo das células */
+/* Estilo das células – padding reduzido */
 th, td {
   border: 1px solid #eef2f7;
-  padding: 10px 8px;
+  padding: 6px 4px; /* antes 10px 8px */
   text-align: center;
-  white-space: nowrap;      /* impede quebra de texto dentro dos dias */
+  white-space: nowrap;
 }
 
 /* Primeira coluna (nome do hábito) fixa ao rolar horizontalmente */
@@ -144,6 +148,8 @@ th:first-child, td:first-child {
   position: sticky;
   left: 0;
   z-index: 2;
+  padding: 6px 8px; /* um pouco mais de espaço para o nome */
+  text-align: left;
 }
 
 /* Para manter o fundo da primeira coluna consistente */
@@ -157,11 +163,12 @@ body.dark td:first-child {
 /* Células dos dias */
 td.dayCell {
   cursor: pointer;
-  min-width: 40px;          /* tamanho mínimo confortável para clicar */
+  min-width: 32px; /* antes 40px */
+  width: 32px;     /* largura fixa opcional */
 }
 
 td.dayCell.marked {
-  color: #fff;              /* texto branco sobre fundo colorido */
+  color: #fff;
 }
 
 /* ========== RODAPÉ ========== */
@@ -175,9 +182,10 @@ td.dayCell.marked {
   padding-top: 8px;
   border-top: 1px solid #ddd;
   color: #374151;
+  font-size: 0.85rem;
 }
 
-/* ========== MODO ESCURO (OPCIONAL) ========== */
+/* ========== MODO ESCURO ========== */
 body.dark {
   background: #000;
   color: #fafafa;
@@ -233,10 +241,11 @@ body.dark .footer {
   border-top-color: #333;
 }
 
-/* ========== RESPONSIVIDADE EXTRA (OPCIONAL) ========== */
+/* ========== RESPONSIVIDADE ========== */
 @media (max-width: 600px) {
   body {
     padding: 5px;
+    font-size: 13px;
   }
   .app {
     padding: 12px;
@@ -245,8 +254,15 @@ body.dark .footer {
     font-size: 1.3rem;
   }
   .tab {
-    padding: 6px 10px;
-    font-size: 0.9rem;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+  }
+  th, td {
+    padding: 4px 2px;
+  }
+  td.dayCell {
+    min-width: 28px;
+    width: 28px;
   }
   .footer {
     flex-direction: column;
