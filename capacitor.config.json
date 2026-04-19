@@ -1,0 +1,6 @@
+{
+  "appId": "com.seuname.habittracker",
+  "appName": "Habit Tracker",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
