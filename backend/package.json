@@ -4,6 +4,7 @@
   "description": "",
   "main": "node server.js",
   "scripts": {
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
