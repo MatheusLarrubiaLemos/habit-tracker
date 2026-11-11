@@ -330,7 +330,9 @@ let newHabitColor = PALETTE[0];
 function addHabit(name) {
   name = (name || '').trim();
   if (!name) { toast('Digite o nome do hábito'); $('habitNameInput').focus(); return; }
-  state.habits.push({ id: genId(), name, color: newHabitColor, marks: {} });
+  const habit = { id: genId(), name, color: newHabitColor, marks: {} };
+  state.habits.push(habit);
+  queueOp({ t: 'create', id: habit.id });
   state.color = newHabitColor;
   // Próxima cor da paleta para o próximo hábito
   const i = PALETTE.indexOf(newHabitColor);
@@ -349,6 +351,7 @@ function toggleMark(habitId, day, cellEl) {
   if (h.marks[key]) delete h.marks[key];
   else h.marks[key] = true;
   saveState();
+  queueOp({ t: 'mark', id: h.id, date: keyToIso(key), marked: !!h.marks[key] });
   // Atualiza só a célula (rápido) e depois os números
   if (cellEl) {
     cellEl.classList.toggle('marked', !!h.marks[key]);
@@ -412,6 +415,7 @@ function saveEdit() {
   h.name = name;
   h.color = editColor;
   saveState();
+  queueOp({ t: 'update', id: h.id });
   closeEdit();
   render();
 }
@@ -421,11 +425,12 @@ function deleteHabit() {
   if (idx < 0) return closeEdit();
   const [removed] = state.habits.splice(idx, 1);
   saveState();
+  queueDelete(removed);
   closeEdit();
   render();
   toast(`“${removed.name}” excluído`, {
     label: 'Desfazer',
-    run: () => { state.habits.splice(idx, 0, removed); saveState(); render(); }
+    run: () => { state.habits.splice(idx, 0, removed); saveState(); queueRestore(removed); render(); }
   });
 }
 
@@ -454,8 +459,12 @@ function importData(file) {
       const parsed = JSON.parse(e.target.result);
       if (!parsed || !Array.isArray(parsed.habits)) throw new Error('formato');
       if (!confirm(`Substituir seus dados atuais por este backup (${parsed.habits.length} hábitos)?`)) return;
+      const old = state.habits;
       state = Object.assign({ year: TODAY.y, activeMonth: TODAY.m, color: PALETTE[0], darkMode: null, habits: [] }, parsed);
       normalizeState();
+      // Se estiver conectado, o servidor também passa a ter exatamente os dados do backup
+      old.forEach(queueDelete);
+      state.habits.forEach(h => { h.id = genId(); delete h.sid; queueRestore(h); });
       state.year = TODAY.y; state.activeMonth = TODAY.m;
       saveState();
       render();
@@ -465,6 +474,301 @@ function importData(file) {
     }
   };
   reader.readAsText(file);
+}
+
+// ============================================================
+// SINCRONIZAÇÃO COM O SERVIDOR
+// Funciona offline: toda ação é salva no aparelho e entra numa fila;
+// quando o servidor responde, a fila é enviada e os dados são atualizados.
+// ============================================================
+const SYNC_KEY = 'habitTrackerSync_v1';
+let sync = { server: '', token: '', email: '', queue: [], lastSync: null };
+let syncStatus = 'local';   // local | syncing | ok | offline | error
+let syncing = false;
+let opCounter = 0;
+
+function loadSync() {
+  try { Object.assign(sync, JSON.parse(localStorage.getItem(SYNC_KEY) || '{}')); } catch {}
+  if (!Array.isArray(sync.queue)) sync.queue = [];
+  const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
+  if (!sync.server && !isNativeApp && /^https?:$/.test(location.protocol)) {
+    sync.server = location.origin;   // app aberto pelo próprio servidor (ex.: http://192.168.0.10:3000)
+  }
+}
+function saveSync() {
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify(sync)); } catch {}
+}
+const loggedIn = () => !!(sync.token && sync.server);
+
+/** "2026-10-5" (mês começando em 0) → "2026-11-05" */
+function keyToIso(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+/** "2026-11-05" → "2026-10-5" */
+function isoToKey(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return markKey(y, m - 1, d);
+}
+
+function normalizeServer(url) {
+  url = String(url || '').trim().replace(/\/+$/, '');
+  if (url && !/^https?:\/\//i.test(url)) url = 'http://' + url;
+  if (/^http:\/\/[^/:]+$/i.test(url)) url += ':3000';   // sem porta → 3000
+  return url;
+}
+
+async function api(path, { method = 'GET', body, server = sync.server, token = sync.token, timeout = 8000 } = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeout);
+  let res;
+  try {
+    res = await fetch(server + '/api' + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctrl.signal
+    });
+  } catch {
+    const err = new Error('Não foi possível falar com o servidor');
+    err.network = true;
+    throw err;
+  } finally { clearTimeout(timer); }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || `Erro ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+function queueOp(op) {
+  if (!loggedIn()) return;
+  opCounter++;
+  sync.queue.push(op);
+  saveSync();
+  scheduleSync();
+}
+
+function queueDelete(habit) {
+  if (!loggedIn()) return;
+  if (!habit.sid) {
+    // Ainda não chegou ao servidor: basta tirar da fila tudo que era dele
+    sync.queue = sync.queue.filter(op => op.id !== habit.id);
+    saveSync();
+    return;
+  }
+  queueOp({ t: 'delete', id: habit.id, sid: habit.sid });
+}
+
+function queueRestore(habit) {
+  if (!loggedIn()) return;
+  const pending = sync.queue.findIndex(op => op.t === 'delete' && op.id === habit.id);
+  if (pending >= 0) { sync.queue.splice(pending, 1); saveSync(); return; }   // exclusão nem foi enviada
+  delete habit.sid;
+  queueOp({ t: 'restore', id: habit.id });
+}
+
+let syncTimer = null;
+function scheduleSync(delay = 400) {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, delay);
+}
+
+const habitPayload = (h) => ({ name: h.name, color: h.color, marks: Object.keys(h.marks).map(keyToIso) });
+
+async function runOp(op) {
+  const h = state.habits.find(x => x.id === op.id);
+  switch (op.t) {
+    case 'create': {
+      if (!h || h.sid) return;
+      const r = await api('/habits', { method: 'POST', body: { name: h.name, color: h.color } });
+      h.sid = r.id;
+      // Marcações feitas antes de o hábito chegar ao servidor
+      const marks = Object.keys(h.marks);
+      for (const k of marks) await api(`/habits/${h.sid}/marks/${keyToIso(k)}`, { method: 'PUT', body: { marked: true } });
+      break;
+    }
+    case 'restore': {
+      if (!h || h.sid) return;
+      const list = await api('/habits/import', { method: 'POST', body: { habits: [habitPayload(h)] } });
+      h.sid = Math.max(...list.map(x => x.id));
+      break;
+    }
+    case 'update':
+      if (!h || !h.sid) return;
+      await api(`/habits/${h.sid}`, { method: 'PATCH', body: { name: h.name, color: h.color } });
+      break;
+    case 'mark':
+      if (!h || !h.sid) return;   // marcação vai junto quando o hábito for criado
+      await api(`/habits/${h.sid}/marks/${op.date}`, { method: 'PUT', body: { marked: op.marked } });
+      break;
+    case 'delete': {
+      const sid = op.sid || h?.sid;
+      if (sid) await api(`/habits/${sid}`, { method: 'DELETE' });
+      break;
+    }
+  }
+}
+
+/** Troca os hábitos locais pelos do servidor (fonte da verdade). */
+function applyServerHabits(list) {
+  state.habits = list.map(s => {
+    const local = state.habits.find(h => h.sid === s.id);
+    const marks = {};
+    s.marks.forEach(iso => { marks[isoToKey(iso)] = true; });
+    return { id: local?.id || 's' + s.id, sid: s.id, name: s.name, color: s.color, marks };
+  });
+  saveState();
+}
+
+async function syncNow() {
+  if (!loggedIn() || syncing) return;
+  syncing = true;
+  setSyncStatus('syncing');
+  try {
+    // 1) envia a fila
+    while (sync.queue.length) {
+      try {
+        await runOp(sync.queue[0]);
+      } catch (e) {
+        if (e.network || e.status === 401) throw e;
+        console.warn('Operação descartada:', sync.queue[0], e.message);   // ex.: 404
+      }
+      sync.queue.shift();
+      saveSync();
+      saveState();
+    }
+    // 2) baixa o estado atual (ignora se o usuário mexeu enquanto baixava)
+    const before = opCounter;
+    const list = await api('/habits');
+    if (before === opCounter && !sync.queue.length) {
+      applyServerHabits(list);
+      const scroll = $('tableWrap').scrollLeft;
+      renderStats(); renderTable();
+      $('tableWrap').scrollLeft = scroll;
+    }
+    sync.lastSync = Date.now();
+    saveSync();
+    setSyncStatus('ok');
+  } catch (e) {
+    if (e.status === 401) {
+      sync.token = ''; saveSync();
+      setSyncStatus('local');
+      toast('Sessão expirada. Entre de novo para sincronizar.');
+    } else {
+      setSyncStatus('offline');
+    }
+  } finally {
+    syncing = false;
+    if (sync.queue.length && syncStatus === 'ok') scheduleSync(200);
+  }
+}
+
+function setSyncStatus(s) {
+  syncStatus = loggedIn() ? s : 'local';
+  const el = $('syncStatus');
+  if (!el) return;
+  const n = sync.queue.length;
+  const map = {
+    local:   ['', 'Salvo só neste aparelho · conectar ao servidor'],
+    syncing: ['busy', 'Sincronizando…'],
+    ok:      ['ok', `Sincronizado · ${sync.email}`],
+    offline: ['warn', `Servidor fora do ar${n ? ` · ${n} alteraç${n === 1 ? 'ão' : 'ões'} na fila` : ''} · tentar de novo`],
+    error:   ['warn', 'Erro ao sincronizar']
+  };
+  const [cls, text] = map[syncStatus] || map.local;
+  el.className = 'sync-status ' + cls;
+  el.querySelector('span').textContent = text;
+}
+
+// ---------- Janela "Conta e servidor" ----------
+function openAccount() {
+  $('optionsPanel').classList.remove('visible');
+  const isIn = loggedIn();
+  $('accountLoggedOut').hidden = isIn;
+  $('accountLoggedIn').hidden = !isIn;
+  $('serverInput').value = sync.server || '';
+  $('accountEmail').textContent = sync.email || '';
+  $('accountServer').textContent = sync.server || '';
+  $('accountLast').textContent = sync.lastSync ? new Date(sync.lastSync).toLocaleString('pt-BR') : 'nunca';
+  $('accountMsg').textContent = '';
+  $('accountModal').hidden = false;
+  if (!isIn) setTimeout(() => (sync.server ? $('emailInput') : $('serverInput')).focus(), 50);
+}
+const closeAccount = () => { $('accountModal').hidden = true; };
+
+function accountMsg(text, ok) {
+  const el = $('accountMsg');
+  el.textContent = text;
+  el.className = 'account-msg ' + (ok ? 'ok' : 'err');
+}
+
+async function testServer() {
+  const server = normalizeServer($('serverInput').value);
+  if (!server) return accountMsg('Digite o endereço do servidor');
+  $('serverInput').value = server;
+  accountMsg('Testando…', true);
+  try {
+    const r = await api('/health', { server, token: '', timeout: 5000 });
+    if (!r.ok) throw new Error();
+    accountMsg('Servidor encontrado ✓', true);
+    return server;
+  } catch {
+    accountMsg('Não encontrei o servidor nesse endereço. Ele está ligado? O celular está no mesmo Wi-Fi?');
+  }
+}
+
+async function doAuth(kind) {
+  const server = normalizeServer($('serverInput').value);
+  const email = $('emailInput').value.trim();
+  const password = $('passwordInput').value;
+  if (!server) return accountMsg('Digite o endereço do servidor');
+  if (!email || !password) return accountMsg('Preencha email e senha');
+  $('serverInput').value = server;
+  accountMsg(kind === 'register' ? 'Criando conta…' : 'Entrando…', true);
+  try {
+    const r = await api('/auth/' + kind, { method: 'POST', body: { email, password }, server, token: '' });
+    Object.assign(sync, { server, token: r.token, email: r.user.email, queue: [] });
+    saveSync();
+    await firstSync();
+    $('passwordInput').value = '';
+    closeAccount();
+  } catch (e) {
+    accountMsg(e.network ? 'Não consegui falar com o servidor. Confira o endereço e se ele está ligado.' : e.message);
+  }
+}
+
+/** Primeiro login neste aparelho: junta os dados locais com os do servidor. */
+async function firstSync() {
+  const serverList = await api('/habits');
+  const local = state.habits.filter(h => h.name);
+  let list = serverList;
+  if (local.length) {
+    const send = !serverList.length || confirm(
+      `Sua conta já tem ${serverList.length} hábito(s) no servidor.\n\n` +
+      `Enviar também os ${local.length} hábito(s) deste aparelho?\n\n` +
+      `OK = enviar e juntar · Cancelar = usar só os do servidor`);
+    if (send) list = await api('/habits/import', { method: 'POST', body: { habits: local.map(habitPayload) } });
+  }
+  state.habits = [];
+  applyServerHabits(list);
+  sync.lastSync = Date.now();
+  saveSync();
+  render();
+  setSyncStatus('ok');
+  toast(`Conectado como ${sync.email}`);
+}
+
+function logout() {
+  if (sync.queue.length && !confirm('Ainda há alterações que não chegaram ao servidor. Sair mesmo assim?')) return;
+  sync.token = ''; sync.queue = [];
+  state.habits.forEach(h => delete h.sid);
+  saveSync(); saveState();
+  closeAccount();
+  setSyncStatus('local');
+  toast('Desconectado. Os dados continuam neste aparelho.');
 }
 
 // ============================================================
@@ -508,8 +812,24 @@ function bindEvents() {
   $('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeEdit(); });
   $('editNameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveEdit(); });
 
+  // Conta e sincronização
+  $('accountBtn').onclick = openAccount;
+  $('syncStatus').onclick = () => (loggedIn() && syncStatus !== 'ok') ? syncNow() : openAccount();
+  $('closeAccountBtn').onclick = closeAccount;
+  $('closeAccountBtn2').onclick = closeAccount;
+  $('accountModal').addEventListener('click', (e) => { if (e.target.id === 'accountModal') closeAccount(); });
+  $('testServerBtn').onclick = testServer;
+  $('loginForm').addEventListener('submit', (e) => { e.preventDefault(); doAuth('login'); });
+  $('registerBtn').onclick = () => doAuth('register');
+  $('syncNowBtn').onclick = () => { syncNow(); closeAccount(); };
+  $('logoutBtn').onclick = logout;
+  window.addEventListener('online', () => scheduleSync(100));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleSync(100); });
+  setInterval(() => { if (!document.hidden) syncNow(); }, 60000);
+
   // Atalhos de teclado (PC)
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('accountModal').hidden) return closeAccount();
     if (e.key === 'Escape' && !$('editModal').hidden) return closeEdit();
     if (e.target.tagName === 'INPUT') return;
     if (e.key === 'ArrowLeft') goTo(state.year, state.activeMonth - 1);
@@ -523,9 +843,12 @@ function bindEvents() {
 // ============================================================
 (function init() {
   loadState();
+  loadSync();
   newHabitColor = PALETTE[state.habits.length % PALETTE.length];
   renderSwatches($('addSwatches'), newHabitColor, c => newHabitColor = c);
   bindEvents();
   render();
+  setSyncStatus(loggedIn() ? 'syncing' : 'local');
   requestAnimationFrame(scrollToToday);
+  if (loggedIn()) syncNow();
 })();

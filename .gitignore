@@ -5,3 +5,6 @@ android/.gradle/
 android/app/build/
 .gradle/
 *.local
+# Banco de dados local (não vai para o GitHub)
+backend/data/
+*.apk

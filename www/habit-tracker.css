@@ -247,7 +247,7 @@ h1 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -.3px; }
   box-shadow: var(--shadow);
 }
 #habitNameInput,
-.modal input[type="text"] {
+.modal input {
   flex: 1 1 220px;
   min-width: 0;
   padding: 10px 14px;
@@ -258,7 +258,7 @@ h1 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -.3px; }
   transition: border-color .15s, box-shadow .15s;
 }
 #habitNameInput:focus,
-.modal input[type="text"]:focus {
+.modal input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
@@ -437,7 +437,7 @@ td.pct-col { color: var(--muted); }
   animation: rise .18s ease;
 }
 .modal h2 { margin: 0 0 4px; font-size: 1.1rem; }
-.modal input[type="text"] { flex: none; width: 100%; }
+.modal input { flex: none; width: 100%; }
 .field-label { font-size: .78rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 4px; }
 .habit-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
 .habit-stats div { background: var(--surface-2); border-radius: 12px; padding: 10px; text-align: center; }
@@ -448,6 +448,32 @@ td.pct-col { color: var(--muted); }
 
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+
+/* Conta e servidor */
+.modal-text { margin: 0 0 4px; color: var(--muted); font-size: .88rem; }
+#accountLoggedOut { display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; gap: 8px; }
+.row input { flex: 1 !important; width: auto !important; }
+.account-msg { margin: 2px 0 0; min-height: 1.2em; font-size: .85rem; }
+.account-msg.ok { color: var(--muted); }
+.account-msg.err { color: var(--danger); }
+.account-info { display: flex; flex-direction: column; gap: 8px; }
+.account-info div { background: var(--surface-2); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; gap: 12px; }
+.account-info span { color: var(--muted); font-size: .82rem; }
+.account-info b { font-size: .88rem; text-align: right; word-break: break-all; }
+
+/* Status de sincronização no rodapé */
+.sync-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: none; border: 1px solid var(--border); border-radius: 999px;
+  padding: 5px 12px; color: var(--muted); font-size: .8rem;
+}
+.sync-status:hover { background: var(--surface); color: var(--text); }
+.sync-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .6; }
+.sync-status.ok i { background: #10b981; opacity: 1; }
+.sync-status.warn i { background: #f59e0b; opacity: 1; }
+.sync-status.busy i { background: var(--accent); opacity: 1; animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
 
 /* ============================================================
    TOAST

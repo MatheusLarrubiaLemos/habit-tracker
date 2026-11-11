@@ -1,5 +1,44 @@
 # Patch Notes — Habit Tracker
 
+## v1.2.0 — 11/11/2026 · "Nuvem em casa"
+
+### ✨ Novidades
+- **Conta e sincronização:** nova janela **Conta e servidor** (menu ⋮ ou o status no rodapé). Nela você cria a conta ou entra, informando o endereço do servidor.
+- **Mesmos dados em todo lugar:** PC, celular e APK usam a mesma conta e os mesmos hábitos.
+- **Funciona sem internet:** se o servidor estiver desligado ou fora do alcance, tudo continua sendo salvo no aparelho e entra numa fila. A fila é enviada sozinha quando o servidor volta.
+- **Primeiro login:** os hábitos que já estavam no aparelho são enviados para a conta. Se a conta já tiver hábitos, o app pergunta se você quer juntar os dois.
+- **Status no rodapé:** mostra se está *Sincronizado*, *Sincronizando…*, *Servidor fora do ar (N na fila)* ou *Salvo só neste aparelho*. Tocar no status tenta de novo.
+- **Sincronização automática:** ao abrir o app, ao voltar para ele e a cada 1 minuto.
+- **Botão Testar:** confere se o endereço do servidor está certo antes de entrar.
+- **App pelo navegador:** o servidor também entrega o app. Abrindo `http://IP-DO-PC:3000`, o endereço do servidor já vem preenchido.
+
+### 🛠️ Servidor
+- **Roda no seu PC:** o banco agora é **SQLite**, um único arquivo em `backend/data/habits.db`. Não precisa instalar banco de dados nem contratar serviço.
+- **Fácil de migrar:** para levar para outro PC ou mini computador, basta copiar a pasta `backend/data`.
+- **Endereços na tela:** ao ligar, o servidor mostra o endereço para usar no PC e no celular.
+- **Segredo de login automático:** é gerado e guardado sozinho (`data/jwt-secret.txt`). O `.env` agora é opcional.
+- **Rotas novas:**
+  - `PUT /api/habits/:id/marks/:data` marca ou desmarca um dia de forma explícita, evitando erros quando a mesma ação é enviada duas vezes.
+  - `POST /api/habits/import` envia vários hábitos de uma vez.
+  - `GET /api/health` serve para testar a conexão.
+- **Mudança de endereço:** as rotas da API agora ficam em `/api/...`.
+- **Login mais longo:** o login dura 1 ano.
+
+### 📱 Android
+- **Acesso ao servidor da sua rede:** o APK agora consegue falar com o servidor pela rede de casa (`http`). Para isso, foram ajustados `capacitor.config.json` e `AndroidManifest`.
+- **Nova versão do APK:** `1.2.0` (versionCode 2).
+
+### 🧰 Atalhos
+- **`iniciar-servidor.bat`:** instala o que falta (só na primeira vez) e liga o servidor.
+- **`gerar-apk.bat`:** atualiza o projeto Android, compila o APK e coloca `HabitTracker.apk` na Área de Trabalho.
+- **`Habit Tracker - Servidor.bat` na Área de Trabalho:** liga o servidor com dois cliques.
+
+### 🔄 Outras mudanças
+- O `package.json` da raiz agora só tem o que o app Android usa. O servidor tem o próprio, em `backend/`.
+- A pasta do banco (`backend/data/`) e os arquivos `.apk` não vão para o GitHub.
+
+---
+
 ## v1.1.0 — 11/11/2026 · "Repaginada"
 
 ### ✨ Novidades

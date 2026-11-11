@@ -1,21 +1,21 @@
+const path = require('path');
+const os = require('os');
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
-const { initSchema } = require('./db');
-
-if (!process.env.JWT_SECRET) {
-  console.error('[server] JWT_SECRET não definido — configure no .env (veja .env.example)');
-  process.exit(1);
-}
+require('dotenv').config({ path: path.join(__dirname, '.env'), quiet: true });
+const { DATA_DIR } = require('./db');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
-app.use('/auth', require('./routes/auth'));
-app.use('/habits', require('./routes/habits'));
+// API
+app.get('/api/health', (req, res) => res.json({ ok: true, app: 'habit-tracker' }));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/habits', require('./routes/habits'));
 
-app.get('/', (req, res) => res.json({ status: 'API rodando' }));
+// O próprio servidor também entrega o app (abra http://IP-DO-PC:3000 no navegador)
+app.use(express.static(path.join(__dirname, '..', 'www')));
 
 // Erros não tratados viram 500 em vez de derrubar o servidor
 app.use((err, req, res, next) => {
@@ -23,8 +23,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erro no servidor' });
 });
 
-const PORT = process.env.PORT || 3000;
-initSchema()
-  .then(() => console.log('[db] Tabelas verificadas'))
-  .catch(e => console.error('[db] Falha ao criar tabelas:', e.message))
-  .finally(() => app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`)));
+function lanAddresses() {
+  return Object.values(os.networkInterfaces()).flat()
+    .filter(i => i && i.family === 'IPv4' && !i.internal)
+    .map(i => i.address);
+}
+
+const PORT = Number(process.env.PORT) || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('\n  Habit Tracker — servidor ligado!\n');
+  console.log(`  Neste PC:     http://localhost:${PORT}`);
+  lanAddresses().forEach(ip => console.log(`  No celular:   http://${ip}:${PORT}   (mesma rede Wi-Fi)`));
+  console.log(`\n  Banco de dados: ${path.join(DATA_DIR, 'habits.db')}`);
+  console.log('  Deixe esta janela aberta. Para desligar, feche-a ou aperte Ctrl+C.\n');
+});

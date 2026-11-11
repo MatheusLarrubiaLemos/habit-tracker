@@ -2,5 +2,8 @@
   "appId": "com.seuname.habittracker",
   "appName": "Habit Tracker",
   "webDir": "www",
-  "bundledWebRuntime": false
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  }
 }

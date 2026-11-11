@@ -28,6 +28,7 @@
             <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg>
           </button>
           <div id="optionsPanel" class="dropdown-menu" role="menu">
+            <button id="accountBtn" role="menuitem">Conta e servidor</button>
             <button id="exportBtn" role="menuitem">Exportar backup (JSON)</button>
             <label for="importFileInput" class="menu-item" role="menuitem">Importar backup (JSON)</label>
             <input type="file" id="importFileInput" accept=".json,application/json" hidden>
@@ -80,7 +81,7 @@
 
     <footer class="footer">
       <span id="summary">--</span>
-      <span class="save-status">Salvo neste dispositivo</span>
+      <button id="syncStatus" class="sync-status" title="Conta e sincronização"><i></i><span>Salvo só neste aparelho</span></button>
     </footer>
   </div>
 
@@ -98,6 +99,49 @@
         <span class="spacer"></span>
         <button id="cancelEditBtn" class="ghost-btn">Cancelar</button>
         <button id="saveEditBtn" class="primary-btn">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL CONTA / SERVIDOR ==================== -->
+  <div class="modal-backdrop" id="accountModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <h2 id="accountTitle">Conta e servidor</h2>
+
+      <form id="loginForm" autocomplete="on">
+        <div id="accountLoggedOut">
+          <p class="modal-text">Conecte ao seu servidor para salvar os hábitos lá e usar os mesmos dados no PC e no celular.</p>
+          <label class="field-label" for="serverInput">Endereço do servidor</label>
+          <div class="row">
+            <input id="serverInput" type="text" inputmode="url" placeholder="ex.: 192.168.0.10:3000" autocapitalize="off" spellcheck="false">
+            <button type="button" id="testServerBtn" class="ghost-btn">Testar</button>
+          </div>
+          <label class="field-label" for="emailInput">Email</label>
+          <input id="emailInput" type="email" autocomplete="username" autocapitalize="off">
+          <label class="field-label" for="passwordInput">Senha</label>
+          <input id="passwordInput" type="password" autocomplete="current-password" minlength="6">
+          <p class="account-msg" id="accountMsg" role="status"></p>
+          <div class="modal-actions">
+            <button type="button" id="registerBtn" class="ghost-btn">Criar conta</button>
+            <span class="spacer"></span>
+            <button type="button" id="closeAccountBtn" class="ghost-btn">Fechar</button>
+            <button type="submit" class="primary-btn">Entrar</button>
+          </div>
+        </div>
+      </form>
+
+      <div id="accountLoggedIn" hidden>
+        <div class="account-info">
+          <div><span>Conta</span><b id="accountEmail"></b></div>
+          <div><span>Servidor</span><b id="accountServer"></b></div>
+          <div><span>Última sincronização</span><b id="accountLast"></b></div>
+        </div>
+        <div class="modal-actions">
+          <button id="logoutBtn" class="danger-btn">Sair</button>
+          <span class="spacer"></span>
+          <button id="closeAccountBtn2" class="ghost-btn">Fechar</button>
+          <button id="syncNowBtn" class="primary-btn">Sincronizar agora</button>
+        </div>
       </div>
     </div>
   </div>
