@@ -1,0 +1,48 @@
+/* ============================================================
+   TOKENS DE DESIGN — compartilhados por PC, tablet e celular
+   São as "variáveis" do design: cores, sombras, raios.
+   No Figma, crie as mesmas variáveis (Light / Dark) com estes nomes
+   para o design e o código falarem a mesma língua.
+   Mudou uma cor aqui? Muda nos três aparelhos.
+   ============================================================ */
+
+:root {
+  --bg: #f4f5fb;
+  --surface: #ffffff;
+  --surface-2: #f7f8fc;
+  --border: #e7e9f2;
+  --text: #141625;
+  --muted: #6b7088;
+  --accent: #4f46e5;
+  --accent-soft: #eef0ff;
+  --accent-text: #ffffff;
+  --today: #4f46e5;
+  --weekend: #fafaff;
+  --cell-empty: #f1f2f8;
+  --cell-hover: #e4e6f2;
+  --danger: #e5484d;
+  --danger-soft: #fdecec;
+  --shadow: 0 1px 2px rgba(20, 22, 37, .04), 0 8px 24px rgba(20, 22, 37, .06);
+  --radius: 18px;
+  --cell: 34px;
+  color-scheme: light;
+}
+
+body.dark {
+  --bg: #0b0c12;
+  --surface: #14151d;
+  --surface-2: #1a1b25;
+  --border: #262836;
+  --text: #ecedf5;
+  --muted: #9095ad;
+  --accent: #7c74ff;
+  --accent-soft: #23234a;
+  --today: #8f88ff;
+  --weekend: #171822;
+  --cell-empty: #1f2130;
+  --cell-hover: #2a2c3e;
+  --danger: #ff6369;
+  --danger-soft: #3a1d22;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}

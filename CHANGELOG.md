@@ -6,6 +6,37 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.5.0 — 11/11/2026 · "Uma versão para cada aparelho" (🟣 GRANDE)
+
+### 🧱 Estrutura do código
+- 🟣 **GRANDE — Três versões separadas: PC, tablet e celular.** Cada uma tem o **próprio HTML e CSS**, numa pasta só dela. Assim dá para desenhar e mexer em cada uma separado (Figma etc.).
+  - `www/pc/` → `index.html` + `estilo.css` (telas de 1025px ou mais)
+  - `www/tablet/` → `index.html` + `estilo.css` (721px a 1024px)
+  - `www/celular/` → `index.html` + `estilo.css` (até 720px)
+- 🟣 **GRANDE — Lógica compartilhada:** o JS fica num lugar só, `www/comum/js/`. Corrigir um bug ou criar uma função vale para as 3 versões de uma vez. Os dados (hábitos, rotinas, conta) também são os mesmos.
+- 🟣 **GRANDE — Página de entrada:** `www/index.html` abre sozinha a versão certa pela largura da tela.
+  - Se a janela mudar de tamanho, troca de versão automaticamente.
+  - Dá para forçar uma versão com `?aparelho=pc`, `tablet` ou `celular`, e voltar ao automático com `?aparelho=auto`.
+- 🟣 **GRANDE — Tokens de design compartilhados:** `www/comum/tokens.css` tem as cores, sombras e raios, nos temas claro e escuro. O mesmo conteúdo está em `www/comum/tokens.json`, pronto para importar no Figma pelo plugin Tokens Studio.
+- 🔹 **PEQUENA — Guia no README:** como editar cada versão, a lista de `id`s que o JS usa (não podem ser apagados) e o caminho do Figma para o código.
+- 🔹 **PEQUENA — Menu enxuto no tablet e no celular:** o HTML deles não tem mais o logo nem o espaçador do menu lateral, que só o PC usa.
+
+### 🐛 Correções
+- 🔹 **PEQUENA — Botões da Semana e do Calendário:** os botões ‹ Hoje › e o + empilhavam um embaixo do outro. Agora ficam na mesma linha.
+
+### 🔄 Mudanças
+- 🔹 **PEQUENA — Tablet com barra embaixo:** o tablet deitado (até 1024px) agora usa a barra de menu embaixo. O menu lateral ficou só no PC.
+- 🔹 **PEQUENA — Resumo da Início no tablet:** os cartões ficam em 3 em cima e 2 embaixo.
+
+### 🗑️ Arquivos antigos (podem ser excluídos)
+- `www/habit-tracker.css`, `www/models.js`, `www/habit-tracker.js`, `www/routines.js`, `www/home.js`
+- a pasta `www/css/`
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.5.0` (versionCode 5). O APK abre a versão celular, ou a tablet num tablet.
+
+---
+
 ## v1.4.0 — 11/11/2026 · "Início" (🟣 GRANDE)
 
 ### ✨ Novidades
