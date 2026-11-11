@@ -52,6 +52,20 @@ db.exec(`
     PRIMARY KEY (routine_id, done_date)
   );
   CREATE INDEX IF NOT EXISTS idx_routines_user ON routines(user_id);
+
+  -- Compromissos: acontecem UMA VEZ só, numa data (ex.: casamento, dentista)
+  CREATE TABLE IF NOT EXISTS appointments (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    color      TEXT NOT NULL DEFAULT '#f59e0b',
+    date       TEXT NOT NULL,                     -- "AAAA-MM-DD"
+    time       TEXT NOT NULL DEFAULT '',          -- "HH:MM" ou vazio
+    note       TEXT NOT NULL DEFAULT '',
+    done       INTEGER NOT NULL DEFAULT 0,        -- 0 = não feito, 1 = feito
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_appointments_user ON appointments(user_id, date);
 `);
 
 /** Segredo do login (JWT): usa o do .env ou gera um e guarda em data/jwt-secret.txt */

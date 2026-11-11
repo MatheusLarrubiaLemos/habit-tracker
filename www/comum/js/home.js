@@ -1,21 +1,22 @@
 // ============================================================
 // TELA INÍCIO (resumão unificado) e TELA CONFIGURAR
+// Início: hábitos + agenda (rotinas e compromissos) de hoje, semana, amanhã e próximos compromissos
 // ============================================================
 
 // ------------------------------------------------------------
 // CONTAS DO RESUMO
 // ------------------------------------------------------------
-/** Hábitos e rotinas de um dia: quantos tinha e quantos foram feitos */
+/** Hábitos + agenda (rotinas e compromissos) de um dia: quantos tinha e quantos foram feitos */
 function dayTotals(date) {
   const iso = toIso(date);
-  const routines = routinesOn(iso);
-  const rDone = routines.filter(r => r.isDoneOn(iso)).length;
+  const agenda = agendaOn(iso);
+  const aDone = agenda.filter(r => r.isDoneOn(iso)).length;
   const y = date.getFullYear(), m = date.getMonth(), d = date.getDate();
   const hDone = state.habits.filter(h => h.isMarked(y, m, d)).length;
   return {
-    iso, routines, rDone, hTotal: state.habits.length, hDone,
-    total: routines.length + state.habits.length,
-    done: rDone + hDone
+    iso, agenda, aDone, hTotal: state.habits.length, hDone,
+    total: agenda.length + state.habits.length,
+    done: aDone + hDone
   };
 }
 
@@ -55,7 +56,7 @@ function renderHome() {
   const monthMarks = state.habits.reduce((s, x) => s + countMonthMarks(x, TODAY.y, TODAY.m), 0);
   const monthPct = monthElapsed ? Math.round((monthMarks / monthElapsed) * 100) : 0;
   const best = state.habits.reduce((b, x) => { const s = currentStreak(x); return s > b.s ? { s, name: x.name } : b; }, { s: 0, name: '' });
-  const message = !t.total ? 'Comece criando seus hábitos e rotinas.'
+  const message = !t.total ? 'Comece criando seus hábitos, rotinas e compromissos.'
     : t.done === t.total ? 'Tudo feito por hoje! 🎉'
     : `Faltam ${t.total - t.done} de ${t.total} para fechar o dia.`;
 
@@ -71,9 +72,9 @@ function renderHome() {
   // 2) Resumão
   $('homeStats').innerHTML = `
     <button class="stat stat-link" data-go="routines">
-      <div class="stat-label">Rotinas hoje</div>
-      <div class="stat-value">${t.rDone}<small> / ${t.routines.length}</small></div>
-      <div class="progress"><span style="width:${t.routines.length ? (t.rDone / t.routines.length) * 100 : 0}%"></span></div>
+      <div class="stat-label">Agenda hoje</div>
+      <div class="stat-value">${t.aDone}<small> / ${t.agenda.length}</small></div>
+      <div class="progress"><span style="width:${t.agenda.length ? (t.aDone / t.agenda.length) * 100 : 0}%"></span></div>
     </button>
     <button class="stat stat-link" data-go="habits">
       <div class="stat-label">Hábitos hoje</div>
@@ -96,15 +97,15 @@ function renderHome() {
       <div class="habit-meta">${best.s ? escapeHtml(best.name) : 'Marque um hábito hoje'}</div>
     </div>`;
 
-  // 3) Seu dia: rotinas + hábitos de hoje, juntos
+  // 3) Seu dia: agenda (rotinas + compromissos) e hábitos de hoje, juntos
   const iso = t.iso;
-  $('homeRoutines').innerHTML = t.routines.length ? t.routines.map(r => `
-    <div class="home-item${r.isDoneOn(iso) ? ' done' : ''}" style="--c:${r.color}">
+  $('homeRoutines').innerHTML = t.agenda.length ? t.agenda.map(r => `
+    <div class="home-item${r.isDoneOn(iso) ? ' done' : ''}${isAppt(r) ? ' appt' : ''}" style="--c:${r.color}">
       ${checkHtml(r, iso)}
-      <span class="hi-name"><b>${escapeHtml(r.name)}</b><small>${r.time || 'sem horário'}</small></span>
-      <span class="hi-tag">Rotina</span>
+      <button class="hi-name" ${editAttr(r)} title="Editar"><b>${escapeHtml(r.name)}</b><small>${r.time || 'sem horário'}${isAppt(r) && r.note ? ' · ' + escapeHtml(r.note) : ''}</small></button>
+      <span class="hi-tag${isAppt(r) ? ' appt' : ''}">${isAppt(r) ? 'Compromisso' : 'Rotina'}</span>
     </div>`).join('')
-    : `<p class="home-empty">Nenhuma rotina para hoje. <a href="#" data-go="manage">Criar rotina</a></p>`;
+    : `<p class="home-empty">Nada na agenda hoje. <a href="#" data-new-appt>+ Compromisso</a> · <a href="#" data-go="routines">Ver agenda</a></p>`;
 
   $('homeHabits').innerHTML = state.habits.length ? state.habits.map(x => {
     const done = x.isMarked(TODAY.y, TODAY.m, TODAY.d);
@@ -132,16 +133,27 @@ function renderHome() {
         <span class="wd">${WEEKDAY_SHORT[d.getDay()]}</span>
         <span class="dn">${d.getDate()}</span>
         <span class="hw-bar"><i style="height:${fut ? 0 : p}%"></i></span>
-        <span class="hw-pct">${fut ? (w.routines.length ? w.routines.length + ' rot.' : '') : w.total ? p + '%' : '—'}</span>
+        <span class="hw-pct">${fut ? (w.agenda.length ? w.agenda.length + (w.agenda.length === 1 ? ' item' : ' itens') : '') : w.total ? p + '%' : '—'}</span>
+        ${w.agenda.some(isAppt) ? '<span class="hw-star" title="Tem compromisso">' + ICON_PIN + '</span>' : ''}
       </button>`;
   }).join('');
 
   // 5) Amanhã
   const tm = new Date(TODAY.y, TODAY.m, TODAY.d + 1);
-  const next = routinesOn(toIso(tm));
+  const next = agendaOn(toIso(tm));
   $('homeTomorrow').innerHTML = next.length
-    ? next.map(r => `<span class="tm-chip" style="--c:${r.color}"><i></i>${escapeHtml(r.name)}${r.time ? ` · ${r.time}` : ''}</span>`).join('')
+    ? next.map(r => `<span class="tm-chip${isAppt(r) ? ' appt' : ''}" style="--c:${r.color}">${isAppt(r) ? ICON_PIN : '<i></i>'}${escapeHtml(r.name)}${r.time ? ` · ${r.time}` : ''}</span>`).join('')
     : '<span class="home-empty">Nada programado.</span>';
+
+  // 6) Próximos compromissos (os 5 mais próximos)
+  const appts = upcomingAppointments().slice(0, 5);
+  $('homeAppts').innerHTML = appts.length ? appts.map(a => `
+    <button class="ha-item${a.done ? ' done' : ''}" data-edit-appt="${a.id}" style="--c:${a.color}">
+      <span class="ac-date"><b>${fromIso(a.date).getDate()}</b><small>${MONTHS[fromIso(a.date).getMonth()].slice(0, 3)}</small></span>
+      <span class="rc-info"><b>${escapeHtml(a.name)}</b><small>${shortDate(a.date)}${a.time ? ' · ' + a.time : ''}</small></span>
+      <span class="ha-when">${a.whenLabel()}</span>
+    </button>`).join('')
+    : `<p class="home-empty">Nenhum compromisso marcado. <a href="#" data-new-appt>+ Compromisso</a></p>`;
 }
 
 // ------------------------------------------------------------
@@ -160,6 +172,7 @@ function renderManage() {
     <div class="empty small"><p>Nenhum hábito. Hábitos são coisas que você marca todo dia, como “Beber água”.</p></div>`;
 
   renderRoutineList();
+  renderApptList();
 
   // Preferências
   const mode = state.darkMode === null || state.darkMode === undefined ? 'system' : state.darkMode ? 'dark' : 'light';
@@ -175,17 +188,15 @@ document.addEventListener('DOMContentLoaded', () => {
   $('homeView').addEventListener('click', (e) => {
     const hb = e.target.closest('[data-habit-today]');
     if (hb) return toggleHabitToday(hb.dataset.habitToday);
-    const check = e.target.closest('.r-check[data-rid]');
-    if (check) return toggleRoutine(check.dataset.rid, check.dataset.date);
-    const day = e.target.closest('[data-day]');
-    if (day) return openDay(day.dataset.day);
+    const na = e.target.closest('[data-new-appt]');
+    if (na) { e.preventDefault(); return openAppt(null); }
+    handleAgendaClick(e);   // check, editar, abrir dia
   });
 
   $('manageView').addEventListener('click', (e) => {
     const eh = e.target.closest('[data-edit-habit]');
     if (eh) return openEdit(eh.dataset.editHabit);
-    const er = e.target.closest('[data-edit-routine]');
-    if (er) return openRoutine(er.dataset.editRoutine);
+    if (handleAgendaClick(e)) return;   // editar rotina / compromisso
     const th = e.target.closest('[data-theme-opt]');
     if (th) {
       state.darkMode = th.dataset.themeOpt === 'system' ? null : th.dataset.themeOpt === 'dark';
@@ -194,6 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   $('manageNewHabit').onclick = () => openEdit(null);
   $('manageNewRoutine').onclick = () => openRoutine(null);
+  $('manageNewAppt').onclick = () => openAppt(null);
+  $('clearPastApptsBtn').onclick = clearPastAppts;
   $('manageAccountBtn').onclick = openAccount;
   $('manageExportBtn').onclick = exportData;
 });

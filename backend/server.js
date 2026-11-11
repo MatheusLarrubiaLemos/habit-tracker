@@ -14,6 +14,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true, app: 'habit-tracker' }
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/habits', require('./routes/habits'));
 app.use('/api/routines', require('./routes/routines'));
+app.use('/api/appointments', require('./routes/appointments'));
 
 // O próprio servidor também entrega o app (abra http://IP-DO-PC:3000 no navegador)
 app.use(express.static(path.join(__dirname, '..', 'www')));

@@ -4,9 +4,10 @@
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const STORAGE_KEY = 'habitTrackerData_v1';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 const VIEWS = ['home', 'habits', 'routines', 'manage'];
-const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Rotinas', manage: 'Configurar' };   // mesma chave de antes: seus dados continuam
+// 'routines' é o nome interno da tela Agenda (rotinas + compromissos); mantido para não perder a tela salva
+const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Agenda', manage: 'Configurar' };
 const PALETTE = ['#10b981','#06b6d4','#3b82f6','#6366f1','#a855f7','#ec4899','#f43f5e','#f59e0b'];
 
 const today = new Date();
@@ -20,7 +21,8 @@ let state = {
   darkMode: null,            // null = segue o tema do sistema
   view: 'home',              // tela aberta: 'home' | 'habits' | 'routines' | 'manage'
   habits: [],                // lista de Habit   (ver models.js)
-  routines: []               // lista de Routine (ver models.js)
+  routines: [],              // lista de Routine     (ver models.js) — se repetem
+  appointments: []           // lista de Appointment (ver models.js) — compromissos, uma vez só
 };
 
 // ============================================================
@@ -105,6 +107,8 @@ function normalizeState() {
   state.habits = state.habits.map(h => h instanceof Habit ? h : new Habit(h));
   if (!Array.isArray(state.routines)) state.routines = [];
   state.routines = state.routines.map(r => r instanceof Routine ? r : new Routine(r));
+  if (!Array.isArray(state.appointments)) state.appointments = [];
+  state.appointments = state.appointments.map(a => a instanceof Appointment ? a : new Appointment(a));
   if (!VIEWS.includes(state.view)) state.view = 'home';
 }
 
@@ -300,7 +304,8 @@ function renderTable() {
 function renderFooter() {
   if (state.view === 'routines') return renderRoutinesFooter();
   if (state.view !== 'habits') {
-    $('summary').textContent = `${state.habits.length} hábito${state.habits.length === 1 ? '' : 's'} · ${state.routines.length} rotina${state.routines.length === 1 ? '' : 's'} · v${APP_VERSION}`;
+    const nA = upcomingAppointments().length;
+    $('summary').textContent = `${state.habits.length} hábito${state.habits.length === 1 ? '' : 's'} · ${state.routines.length} rotina${state.routines.length === 1 ? '' : 's'} · ${nA} compromisso${nA === 1 ? '' : 's'} pela frente · v${APP_VERSION}`;
     return;
   }
   const total = state.habits.reduce((s, h) => s + countMonthMarks(h, state.year, state.activeMonth), 0);
@@ -510,15 +515,14 @@ function importData(file) {
       const parsed = JSON.parse(e.target.result);
       if (!parsed || !Array.isArray(parsed.habits)) throw new Error('formato');
       const nR = Array.isArray(parsed.routines) ? parsed.routines.length : 0;
-      if (!confirm(`Substituir seus dados atuais por este backup (${parsed.habits.length} hábitos, ${nR} rotinas)?`)) return;
-      const old = state.habits;
-      const oldRoutines = state.routines;
-      state = Object.assign({ year: TODAY.y, activeMonth: TODAY.m, color: PALETTE[0], darkMode: null, view: state.view, habits: [], routines: [] }, parsed);
+      const nA = Array.isArray(parsed.appointments) ? parsed.appointments.length : 0;
+      if (!confirm(`Substituir seus dados atuais por este backup (${parsed.habits.length} hábitos, ${nR} rotinas, ${nA} compromissos)?`)) return;
+      const old = [...state.habits, ...state.routines, ...state.appointments];
+      state = Object.assign({ year: TODAY.y, activeMonth: TODAY.m, color: PALETTE[0], darkMode: null, view: state.view, habits: [], routines: [], appointments: [] }, parsed);
       normalizeState();
       // Se estiver conectado, o servidor também passa a ter exatamente os dados do backup
       old.forEach(queueDelete);
-      oldRoutines.forEach(queueDelete);
-      [...state.habits, ...state.routines].forEach(x => { x.id = genId(); delete x.sid; queueRestore(x); });
+      [...state.habits, ...state.routines, ...state.appointments].forEach(x => { x.id = genId(); delete x.sid; queueRestore(x); });
       state.year = TODAY.y; state.activeMonth = TODAY.m;
       saveState();
       render();
@@ -633,6 +637,7 @@ function scheduleSync(delay = 400) {
 
 async function runOp(op) {
   if (op.k === 'routine') return runRoutineOp(op);
+  if (op.k === 'appointment') return runAppointmentOp(op);
   const h = state.habits.find(x => x.id === op.id);
   switch (op.t) {
     case 'create': {
@@ -692,9 +697,37 @@ async function runRoutineOp(op) {
   }
 }
 
+// Compromisso: qualquer mudança (nome, data, feito…) manda o estado completo
+async function runAppointmentOp(op) {
+  const a = state.appointments.find(x => x.id === op.id);
+  switch (op.t) {
+    case 'create':
+    case 'restore': {
+      if (!a || a.sid) return;
+      const res = await api('/appointments', { method: 'POST', body: a.toPayload() });
+      a.sid = res.id;
+      break;
+    }
+    case 'update':
+    case 'mark':
+      if (!a || !a.sid) return;   // vai completo quando for criado
+      await api(`/appointments/${a.sid}`, { method: 'PATCH', body: a.toPayload() });
+      break;
+    case 'delete': {
+      const sid = op.sid || a?.sid;
+      if (sid) await api(`/appointments/${sid}`, { method: 'DELETE' });
+      break;
+    }
+  }
+}
+
 /** Troca os dados locais pelos do servidor (fonte da verdade). */
 function applyServerHabits(list) {
   state.habits = list.map(s => Habit.fromServer(s, state.habits.find(h => h.sid === s.id)?.id));
+  saveState();
+}
+function applyServerAppointments(list) {
+  state.appointments = list.map(s => Appointment.fromServer(s, state.appointments.find(a => a.sid === s.id)?.id));
   saveState();
 }
 function applyServerRoutines(list) {
@@ -721,10 +754,11 @@ async function syncNow() {
     }
     // 2) baixa o estado atual (ignora se o usuário mexeu enquanto baixava)
     const before = opCounter;
-    const [list, routines] = await Promise.all([api('/habits'), api('/routines')]);
+    const [list, routines, appointments] = await Promise.all([api('/habits'), api('/routines'), api('/appointments')]);
     if (before === opCounter && !sync.queue.length) {
       applyServerHabits(list);
       applyServerRoutines(routines);
+      applyServerAppointments(appointments);
       const scroll = $('tableWrap').scrollLeft;
       renderView();
       $('tableWrap').scrollLeft = scroll;
@@ -822,26 +856,31 @@ async function doAuth(kind) {
 
 /** Primeiro login neste aparelho: junta os dados locais com os do servidor. */
 async function firstSync() {
-  const [serverList, serverRoutines] = await Promise.all([api('/habits'), api('/routines')]);
+  const [serverList, serverRoutines, serverAppts] = await Promise.all([api('/habits'), api('/routines'), api('/appointments')]);
   const local = state.habits.filter(h => h.name);
   const localR = state.routines.filter(r => r.name);
-  let list = serverList, routines = serverRoutines;
-  if (local.length || localR.length) {
-    const nServer = serverList.length + serverRoutines.length;
+  const localA = state.appointments.filter(a => a.name);
+  let list = serverList, routines = serverRoutines, appointments = serverAppts;
+  if (local.length || localR.length || localA.length) {
+    const nServer = serverList.length + serverRoutines.length + serverAppts.length;
     const send = !nServer || confirm(
-      `Sua conta já tem ${serverList.length} hábito(s) e ${serverRoutines.length} rotina(s) no servidor.\n\n` +
-      `Enviar também os ${local.length} hábito(s) e ${localR.length} rotina(s) deste aparelho?\n\n` +
+      `Sua conta já tem ${serverList.length} hábito(s), ${serverRoutines.length} rotina(s) e ${serverAppts.length} compromisso(s) no servidor.\n\n` +
+      `Enviar também os ${local.length} hábito(s), ${localR.length} rotina(s) e ${localA.length} compromisso(s) deste aparelho?\n\n` +
       `OK = enviar e juntar · Cancelar = usar só os do servidor`);
     if (send) {
       if (local.length) list = await api('/habits/import', { method: 'POST', body: { habits: local.map(h => h.toPayload()) } });
       for (const r of localR) await api('/routines', { method: 'POST', body: r.toPayload() });
       if (localR.length) routines = await api('/routines');
+      for (const a of localA) await api('/appointments', { method: 'POST', body: a.toPayload() });
+      if (localA.length) appointments = await api('/appointments');
     }
   }
   state.habits = [];
   state.routines = [];
+  state.appointments = [];
   applyServerHabits(list);
   applyServerRoutines(routines);
+  applyServerAppointments(appointments);
   sync.lastSync = Date.now();
   saveSync();
   render();
@@ -852,7 +891,7 @@ async function firstSync() {
 function logout() {
   if (sync.queue.length && !confirm('Ainda há alterações que não chegaram ao servidor. Sair mesmo assim?')) return;
   sync.token = ''; sync.queue = [];
-  [...state.habits, ...state.routines].forEach(x => delete x.sid);
+  [...state.habits, ...state.routines, ...state.appointments].forEach(x => delete x.sid);
   saveSync(); saveState();
   closeAccount();
   setSyncStatus('local');
@@ -929,7 +968,9 @@ function bindEvents() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !$('accountModal').hidden) return closeAccount();
     if (e.key === 'Escape' && !$('editModal').hidden) return closeEdit();
-    if (e.target.tagName === 'INPUT') return;
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;   // digitando: sem atalhos
+    if (document.querySelector('.modal-backdrop:not([hidden])')) return;       // janela aberta: sem atalhos
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'ArrowLeft') goTo(state.year, state.activeMonth - 1);
     if (e.key === 'ArrowRight') goTo(state.year, state.activeMonth + 1);
     if (e.key.toLowerCase() === 'h') goTo(TODAY.y, TODAY.m);

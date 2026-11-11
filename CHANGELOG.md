@@ -6,6 +6,53 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.6.0 — 11/11/2026 · "Agenda e compromissos" (🟣 GRANDE)
+
+### ✨ Novidades
+- 🟣 **GRANDE — Compromissos (acontecem uma vez só):** algo com data marcada que **não se repete** e não fica na lista de rotinas para sempre. Exemplos: um casamento, o dentista, uma prova.
+  - **Campos:** nome, data, horário (opcional), observação (opcional, ex.: "levar o presente") e cor.
+  - **Marcar como feito:** funciona igual às rotinas. Dias futuros só podem ser marcados quando chegarem.
+  - **Mudar a data:** dá para editar a data depois. Se mudar de dia, ele volta a ficar como não feito.
+- 🟣 **GRANDE — Criar compromisso tocando num dia:** a janela do dia (na semana, no calendário ou na Início) tem o botão **"+ Compromisso neste dia"**, que já vem com a data preenchida. Na mesma janela:
+  - o compromisso aparece com **★**;
+  - tocar no nome abre a edição;
+  - o botão **Excluir** apaga só ele.
+- 🟣 **GRANDE — Botões "+ Compromisso" e "+ Rotina" na Agenda:** dois botões grandes logo abaixo do "Hoje", cada um explicando a diferença:
+  - **Compromisso** acontece uma vez só.
+  - **Rotina** se repete nos dias escolhidos.
+- 🟣 **GRANDE — Próximos compromissos na Início:** novo painel com os 5 compromissos mais próximos. Cada um mostra a data em destaque e quanto falta ("hoje", "amanhã", "em 10 dias").
+- 🟣 **GRANDE — Compromissos no Configurar:** nova seção com os compromissos que ainda vão acontecer, o botão *Novo compromisso* e **"Limpar os que já passaram"**. Os que já passaram continuam no calendário como histórico, até você limpar.
+
+### 🔄 Mudanças
+- 🟣 **GRANDE — "Rotinas" agora se chama "Agenda":** a tela junta **rotinas e compromissos** no cartão de hoje, na semana e no calendário.
+- 🔹 **PEQUENA — Jeito de diferenciar na tela:** ★ estrela e check **redondo** = compromisso. Check **quadrado** = rotina. No calendário, o compromisso aparece primeiro no dia, com contorno. No celular, vira uma estrelinha no lugar da bolinha.
+- 🔹 **PEQUENA — Início:**
+  - "Rotinas de hoje" virou **"Agenda de hoje"**, com etiquetas *Rotina* e *Compromisso*. Tocar no nome abre a edição.
+  - O cartão "Rotinas hoje" virou **"Agenda hoje"**.
+  - Na "Sua semana", dia com compromisso ganha uma ★.
+  - "Amanhã" agora também mostra os compromissos.
+- 🔹 **PEQUENA — Janela do dia:** "Adicionar só neste dia" virou **"Pôr uma rotina só neste dia"**, para não confundir com compromisso.
+- 🔹 **PEQUENA — Rodapé:** mostra quantos compromissos ainda estão pela frente.
+- 🔹 **PEQUENA — Backup:** exportar/importar JSON agora inclui os compromissos.
+
+### 🐛 Correções
+- 🔹 **PEQUENA — Atalhos de teclado:** as setas ← → e a tecla H não trocam mais de mês enquanto você digita numa caixa de texto ou com uma janela aberta.
+
+### 🧱 Estrutura do código
+- 🟣 **GRANDE — Nova classe `Appointment` (compromisso)** em `comum/js/models.js`. Ela tem os mesmos métodos da `Routine` (`isScheduledOn`, `isDoneOn`, `setDone`), então a Agenda trata os dois do mesmo jeito.
+- 🔹 **PEQUENA — Funções novas:** `agendaOn(data)` (rotinas + compromissos de um dia) e `upcomingAppointments()` (próximos compromissos).
+- 🔹 **PEQUENA — Novos tokens de cor** `--appt` e `--appt-soft` (âmbar), em `tokens.css` e `tokens.json`.
+- 🔹 **PEQUENA — HTML das 3 versões:** pc, tablet e celular ganharam a janela do compromisso, os botões novos e a seção no Configurar. O README tem a lista de `id`s atualizada.
+
+### 🛠️ Servidor
+- 🟣 **GRANDE — Tabela `appointments` e rotas `/api/appointments`:** listar, criar, editar (inclusive marcar feito) e excluir.
+- 🟣 **GRANDE — Sincronização dos compromissos:** igual a hábitos e rotinas, funcionando offline com fila. No primeiro login, os compromissos do aparelho também são enviados.
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.6.0` (versionCode 6).
+
+---
+
 ## v1.5.0 — 11/11/2026 · "Uma versão para cada aparelho" (🟣 GRANDE)
 
 ### 🧱 Estrutura do código

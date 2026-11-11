@@ -3,7 +3,11 @@
 // Hábito  = algo que você acompanha todo dia na grade (marca ou não marca).
 // Rotina  = uma atividade com PROGRAMAÇÃO: acontece em dias certos da semana
 //           (ex.: Estudar ter/qua), podendo ter horário, dias extras e dias pulados.
-// As duas herdam de "Registro", que tem o que é comum: id, nome, cor.
+// Compromisso (Appointment) = acontece UMA VEZ só, numa data (ex.: casamento,
+//           dentista). Não se repete e não entra na lista de rotinas.
+// Todos herdam de "Registro", que tem o que é comum: id, nome, cor.
+// Rotina e Compromisso formam a AGENDA e têm os mesmos métodos:
+//   isScheduledOn(data) · isDoneOn(data) · setDone(data, sim/não)
 // ============================================================
 
 const WEEKDAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -134,8 +138,63 @@ class Routine extends Registro {
   }
 }
 
-/** Ordena rotinas: com horário primeiro (por hora), depois por nome */
-function sortRoutines(list) {
+// ------------------------------------------------------------
+class Appointment extends Registro {
+  constructor(data = {}) {
+    super(data);
+    this.kind = 'appointment';
+    this.date = ISO_RE.test(data.date || '') ? data.date : toIso(new Date());   // o único dia em que acontece
+    this.time = TIME_RE.test(data.time || '') ? data.time : '';                 // "16:00" ou vazio
+    this.note = String(data.note || '').trim().slice(0, 200);                   // observação opcional
+    this.done = !!data.done;
+  }
+  isScheduledOn(date) { return (typeof date === 'string' ? date : toIso(date)) === this.date; }
+  isDoneOn(date) { return this.done && this.isScheduledOn(date); }
+  setDone(date, value) { if (this.isScheduledOn(date)) this.done = !!value; }
+
+  /** Já passou? (o dia é anterior a hoje) */
+  isPast() { return this.date < toIso(new Date(TODAY.y, TODAY.m, TODAY.d)); }
+
+  /** Quantos dias faltam (0 = hoje, 1 = amanhã, negativo = já passou) */
+  daysUntil() {
+    return Math.round((fromIso(this.date) - new Date(TODAY.y, TODAY.m, TODAY.d)) / 86400000);
+  }
+
+  /** "hoje", "amanhã", "em 10 dias", "há 3 dias" */
+  whenLabel() {
+    const n = this.daysUntil();
+    if (n === 0) return 'hoje';
+    if (n === 1) return 'amanhã';
+    if (n === -1) return 'ontem';
+    return n > 0 ? `em ${n} dias` : `há ${-n} dias`;
+  }
+
+  toPayload() {
+    return { name: this.name, color: this.color, date: this.date, time: this.time, note: this.note, done: this.done };
+  }
+  static fromServer(s, localId) {
+    return new Appointment({ ...s, id: localId || 'a' + s.id, sid: s.id });
+  }
+}
+
+/** Ordena itens da agenda: com horário primeiro (por hora), depois por nome */
+function sortAgenda(list) {
   return [...list].sort((a, b) =>
     (a.time || '99:99').localeCompare(b.time || '99:99') || a.name.localeCompare(b.name, 'pt-BR'));
+}
+const sortRoutines = sortAgenda;   // nome antigo, mantido por compatibilidade
+
+/** Tudo que está na agenda num dia: rotinas programadas + compromissos daquela data */
+function agendaOn(iso) {
+  return sortAgenda([
+    ...state.routines.filter(r => r.isScheduledOn(iso)),
+    ...state.appointments.filter(a => a.date === iso)
+  ]);
+}
+
+/** Compromissos de hoje em diante, do mais próximo ao mais distante */
+function upcomingAppointments() {
+  const t = toIso(new Date(TODAY.y, TODAY.m, TODAY.d));
+  return state.appointments.filter(a => a.date >= t)
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time || '99:99').localeCompare(b.time || '99:99'));
 }
