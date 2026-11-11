@@ -30,7 +30,10 @@ Instale o **Tailscale** (gratuito) no PC e no celular, entrando com a mesma cont
 4. No app, troque o endereço do servidor em **Conta e servidor**.
 
 ## Estrutura
-- `www/`: o app (HTML, CSS e JS). É usado pelo navegador e pelo APK.
+- `www/`: o app. É usado pelo navegador e pelo APK.
+  - `models.js`: as classes `Habit` (hábitos) e `Routine` (rotinas)
+  - `habit-tracker.js`: a aba Hábitos, a sincronização e a conta
+  - `routines.js`: a aba Rotinas (hoje, semana e calendário)
 - `backend/`: o servidor (Express + SQLite). O banco fica em `backend/data/habits.db`.
 - `android/`: o projeto Android gerado pelo Capacitor.
-- `CHANGELOG.md`: as patch notes.
+- `CHANGELOG.md`: as patch notes. 🟣 Mudança grande sobe o número do meio da versão; 🔹 pequena sobe o último.

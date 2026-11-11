@@ -32,6 +32,26 @@ db.exec(`
     PRIMARY KEY (habit_id, marked_date)
   );
   CREATE INDEX IF NOT EXISTS idx_habits_user ON habits(user_id);
+
+  -- Rotinas: atividades com programação (dias da semana, horário, dias avulsos)
+  CREATE TABLE IF NOT EXISTS routines (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    color       TEXT NOT NULL DEFAULT '#6366f1',
+    time        TEXT NOT NULL DEFAULT '',          -- "HH:MM" ou vazio
+    days        TEXT NOT NULL DEFAULT '[]',        -- JSON: [0..6] (0 = domingo)
+    extra_dates TEXT NOT NULL DEFAULT '[]',        -- JSON: ["AAAA-MM-DD"] dias avulsos
+    skip_dates  TEXT NOT NULL DEFAULT '[]',        -- JSON: ["AAAA-MM-DD"] dias pulados
+    start_date  TEXT NOT NULL,                     -- "AAAA-MM-DD"
+    created_at  TEXT DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS routine_done (
+    routine_id INTEGER NOT NULL REFERENCES routines(id) ON DELETE CASCADE,
+    done_date  TEXT NOT NULL,                      -- "AAAA-MM-DD"
+    PRIMARY KEY (routine_id, done_date)
+  );
+  CREATE INDEX IF NOT EXISTS idx_routines_user ON routines(user_id);
 `);
 
 /** Segredo do login (JWT): usa o do .env ou gera um e guarda em data/jwt-secret.txt */

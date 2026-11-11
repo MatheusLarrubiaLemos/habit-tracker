@@ -15,7 +15,9 @@ let state = {
   activeMonth: TODAY.m,
   color: PALETTE[0],
   darkMode: null,            // null = segue o tema do sistema
-  habits: []                 // { id, name, color, marks: { "AAAA-M-D": true } }  (M começa em 0)
+  view: 'habits',            // aba aberta: 'habits' | 'routines'
+  habits: [],                // lista de Habit   (ver models.js)
+  routines: []               // lista de Routine (ver models.js)
 };
 
 // ============================================================
@@ -97,6 +99,10 @@ function normalizeState() {
       h.marks = fixed;
     }
   });
+  state.habits = state.habits.map(h => h instanceof Habit ? h : new Habit(h));
+  if (!Array.isArray(state.routines)) state.routines = [];
+  state.routines = state.routines.map(r => r instanceof Routine ? r : new Routine(r));
+  if (!['habits', 'routines'].includes(state.view)) state.view = 'habits';
 }
 
 function loadState() {
@@ -289,6 +295,7 @@ function renderTable() {
 }
 
 function renderFooter() {
+  if (state.view === 'routines') return renderRoutinesFooter();
   const total = state.habits.reduce((s, h) => s + countMonthMarks(h, state.year, state.activeMonth), 0);
   $('summary').textContent = `${total} marcações em ${MONTHS[state.activeMonth]} · ${state.habits.length} hábito${state.habits.length === 1 ? '' : 's'}`;
 }
@@ -305,8 +312,24 @@ function render() {
   renderGreeting();
   renderHeader();
   renderTabs();
-  renderStats();
-  renderTable();
+  renderView();
+}
+
+/** Desenha a aba aberta (Hábitos ou Rotinas). */
+function renderView() {
+  const isHabits = state.view === 'habits';
+  $('habitsView').hidden = !isHabits;
+  $('routinesView').hidden = isHabits;
+  document.querySelectorAll('.view-tab').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
+  if (isHabits) { renderStats(); renderTable(); }
+  else renderRoutines();
+}
+
+function setView(view) {
+  state.view = view;
+  saveState();
+  renderView();
+  requestAnimationFrame(view === 'habits' ? scrollToToday : scrollWeekToToday);
 }
 
 // ============================================================
@@ -330,7 +353,7 @@ let newHabitColor = PALETTE[0];
 function addHabit(name) {
   name = (name || '').trim();
   if (!name) { toast('Digite o nome do hábito'); $('habitNameInput').focus(); return; }
-  const habit = { id: genId(), name, color: newHabitColor, marks: {} };
+  const habit = new Habit({ name, color: newHabitColor });
   state.habits.push(habit);
   queueOp({ t: 'create', id: habit.id });
   state.color = newHabitColor;
@@ -458,13 +481,16 @@ function importData(file) {
     try {
       const parsed = JSON.parse(e.target.result);
       if (!parsed || !Array.isArray(parsed.habits)) throw new Error('formato');
-      if (!confirm(`Substituir seus dados atuais por este backup (${parsed.habits.length} hábitos)?`)) return;
+      const nR = Array.isArray(parsed.routines) ? parsed.routines.length : 0;
+      if (!confirm(`Substituir seus dados atuais por este backup (${parsed.habits.length} hábitos, ${nR} rotinas)?`)) return;
       const old = state.habits;
-      state = Object.assign({ year: TODAY.y, activeMonth: TODAY.m, color: PALETTE[0], darkMode: null, habits: [] }, parsed);
+      const oldRoutines = state.routines;
+      state = Object.assign({ year: TODAY.y, activeMonth: TODAY.m, color: PALETTE[0], darkMode: null, view: state.view, habits: [], routines: [] }, parsed);
       normalizeState();
       // Se estiver conectado, o servidor também passa a ter exatamente os dados do backup
       old.forEach(queueDelete);
-      state.habits.forEach(h => { h.id = genId(); delete h.sid; queueRestore(h); });
+      oldRoutines.forEach(queueDelete);
+      [...state.habits, ...state.routines].forEach(x => { x.id = genId(); delete x.sid; queueRestore(x); });
       state.year = TODAY.y; state.activeMonth = TODAY.m;
       saveState();
       render();
@@ -551,23 +577,24 @@ function queueOp(op) {
   scheduleSync();
 }
 
-function queueDelete(habit) {
+// Toda operação leva "k" (tipo): 'habit' ou 'routine'
+function queueDelete(item) {
   if (!loggedIn()) return;
-  if (!habit.sid) {
+  if (!item.sid) {
     // Ainda não chegou ao servidor: basta tirar da fila tudo que era dele
-    sync.queue = sync.queue.filter(op => op.id !== habit.id);
+    sync.queue = sync.queue.filter(op => op.id !== item.id);
     saveSync();
     return;
   }
-  queueOp({ t: 'delete', id: habit.id, sid: habit.sid });
+  queueOp({ t: 'delete', k: item.kind, id: item.id, sid: item.sid });
 }
 
-function queueRestore(habit) {
+function queueRestore(item) {
   if (!loggedIn()) return;
-  const pending = sync.queue.findIndex(op => op.t === 'delete' && op.id === habit.id);
+  const pending = sync.queue.findIndex(op => op.t === 'delete' && op.id === item.id);
   if (pending >= 0) { sync.queue.splice(pending, 1); saveSync(); return; }   // exclusão nem foi enviada
-  delete habit.sid;
-  queueOp({ t: 'restore', id: habit.id });
+  delete item.sid;
+  queueOp({ t: 'restore', k: item.kind, id: item.id });
 }
 
 let syncTimer = null;
@@ -576,9 +603,8 @@ function scheduleSync(delay = 400) {
   syncTimer = setTimeout(syncNow, delay);
 }
 
-const habitPayload = (h) => ({ name: h.name, color: h.color, marks: Object.keys(h.marks).map(keyToIso) });
-
 async function runOp(op) {
+  if (op.k === 'routine') return runRoutineOp(op);
   const h = state.habits.find(x => x.id === op.id);
   switch (op.t) {
     case 'create': {
@@ -592,7 +618,7 @@ async function runOp(op) {
     }
     case 'restore': {
       if (!h || h.sid) return;
-      const list = await api('/habits/import', { method: 'POST', body: { habits: [habitPayload(h)] } });
+      const list = await api('/habits/import', { method: 'POST', body: { habits: [h.toPayload()] } });
       h.sid = Math.max(...list.map(x => x.id));
       break;
     }
@@ -612,14 +638,39 @@ async function runOp(op) {
   }
 }
 
-/** Troca os hábitos locais pelos do servidor (fonte da verdade). */
+async function runRoutineOp(op) {
+  const r = state.routines.find(x => x.id === op.id);
+  switch (op.t) {
+    case 'create':
+    case 'restore': {
+      if (!r || r.sid) return;
+      const res = await api('/routines', { method: 'POST', body: r.toPayload() });
+      r.sid = res.id;
+      break;
+    }
+    case 'update':
+      if (!r || !r.sid) return;   // vai completa quando for criada
+      await api(`/routines/${r.sid}`, { method: 'PATCH', body: r.toPayload() });
+      break;
+    case 'mark':
+      if (!r || !r.sid) return;
+      await api(`/routines/${r.sid}/done/${op.date}`, { method: 'PUT', body: { done: op.done } });
+      break;
+    case 'delete': {
+      const sid = op.sid || r?.sid;
+      if (sid) await api(`/routines/${sid}`, { method: 'DELETE' });
+      break;
+    }
+  }
+}
+
+/** Troca os dados locais pelos do servidor (fonte da verdade). */
 function applyServerHabits(list) {
-  state.habits = list.map(s => {
-    const local = state.habits.find(h => h.sid === s.id);
-    const marks = {};
-    s.marks.forEach(iso => { marks[isoToKey(iso)] = true; });
-    return { id: local?.id || 's' + s.id, sid: s.id, name: s.name, color: s.color, marks };
-  });
+  state.habits = list.map(s => Habit.fromServer(s, state.habits.find(h => h.sid === s.id)?.id));
+  saveState();
+}
+function applyServerRoutines(list) {
+  state.routines = list.map(s => Routine.fromServer(s, state.routines.find(r => r.sid === s.id)?.id));
   saveState();
 }
 
@@ -642,11 +693,12 @@ async function syncNow() {
     }
     // 2) baixa o estado atual (ignora se o usuário mexeu enquanto baixava)
     const before = opCounter;
-    const list = await api('/habits');
+    const [list, routines] = await Promise.all([api('/habits'), api('/routines')]);
     if (before === opCounter && !sync.queue.length) {
       applyServerHabits(list);
+      applyServerRoutines(routines);
       const scroll = $('tableWrap').scrollLeft;
-      renderStats(); renderTable();
+      renderView();
       $('tableWrap').scrollLeft = scroll;
     }
     sync.lastSync = Date.now();
@@ -742,18 +794,26 @@ async function doAuth(kind) {
 
 /** Primeiro login neste aparelho: junta os dados locais com os do servidor. */
 async function firstSync() {
-  const serverList = await api('/habits');
+  const [serverList, serverRoutines] = await Promise.all([api('/habits'), api('/routines')]);
   const local = state.habits.filter(h => h.name);
-  let list = serverList;
-  if (local.length) {
-    const send = !serverList.length || confirm(
-      `Sua conta já tem ${serverList.length} hábito(s) no servidor.\n\n` +
-      `Enviar também os ${local.length} hábito(s) deste aparelho?\n\n` +
+  const localR = state.routines.filter(r => r.name);
+  let list = serverList, routines = serverRoutines;
+  if (local.length || localR.length) {
+    const nServer = serverList.length + serverRoutines.length;
+    const send = !nServer || confirm(
+      `Sua conta já tem ${serverList.length} hábito(s) e ${serverRoutines.length} rotina(s) no servidor.\n\n` +
+      `Enviar também os ${local.length} hábito(s) e ${localR.length} rotina(s) deste aparelho?\n\n` +
       `OK = enviar e juntar · Cancelar = usar só os do servidor`);
-    if (send) list = await api('/habits/import', { method: 'POST', body: { habits: local.map(habitPayload) } });
+    if (send) {
+      if (local.length) list = await api('/habits/import', { method: 'POST', body: { habits: local.map(h => h.toPayload()) } });
+      for (const r of localR) await api('/routines', { method: 'POST', body: r.toPayload() });
+      if (localR.length) routines = await api('/routines');
+    }
   }
   state.habits = [];
+  state.routines = [];
   applyServerHabits(list);
+  applyServerRoutines(routines);
   sync.lastSync = Date.now();
   saveSync();
   render();
@@ -764,7 +824,7 @@ async function firstSync() {
 function logout() {
   if (sync.queue.length && !confirm('Ainda há alterações que não chegaram ao servidor. Sair mesmo assim?')) return;
   sync.token = ''; sync.queue = [];
-  state.habits.forEach(h => delete h.sid);
+  [...state.habits, ...state.routines].forEach(x => delete x.sid);
   saveSync(); saveState();
   closeAccount();
   setSyncStatus('local');
@@ -812,6 +872,9 @@ function bindEvents() {
   $('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeEdit(); });
   $('editNameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveEdit(); });
 
+  // Abas Hábitos / Rotinas
+  document.querySelectorAll('.view-tab').forEach(b => b.onclick = () => setView(b.dataset.view));
+
   // Conta e sincronização
   $('accountBtn').onclick = openAccount;
   $('syncStatus').onclick = () => (loggedIn() && syncStatus !== 'ok') ? syncNow() : openAccount();
@@ -841,7 +904,7 @@ function bindEvents() {
 // ============================================================
 // INICIALIZAÇÃO
 // ============================================================
-(function init() {
+document.addEventListener('DOMContentLoaded', function init() {
   loadState();
   loadSync();
   newHabitColor = PALETTE[state.habits.length % PALETTE.length];
@@ -849,6 +912,6 @@ function bindEvents() {
   bindEvents();
   render();
   setSyncStatus(loggedIn() ? 'syncing' : 'local');
-  requestAnimationFrame(scrollToToday);
+  requestAnimationFrame(state.view === 'habits' ? scrollToToday : scrollWeekToToday);
   if (loggedIn()) syncNow();
-})();
+});

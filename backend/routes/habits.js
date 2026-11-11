@@ -1,20 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const { db, JWT_SECRET } = require('../db');
+const { db } = require('../db');
 
-// Middleware: verifica se o token é válido
-router.use((req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Sem autorização' });
-  try {
-    req.user = jwt.verify(token, JWT_SECRET);
-    if (!db.prepare('SELECT 1 FROM users WHERE id = ?').get(req.user.id)) throw new Error();
-    next();
-  } catch {
-    res.status(401).json({ error: 'Sessão expirada, entre de novo' });
-  }
-});
+router.use(require('../requireAuth'));
 
 const COLOR_RE = /^#[0-9a-f]{6}$/i;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;

@@ -492,6 +492,225 @@ td.pct-col { color: var(--muted); }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* ============================================================
+   ABAS PRINCIPAIS (Hábitos / Rotinas)
+   ============================================================ */
+.view { display: flex; flex-direction: column; gap: 16px; }
+.view-tabs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 4px; box-shadow: var(--shadow);
+  max-width: 420px; width: 100%; align-self: center;
+}
+.view-tab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 12px; border: none; border-radius: 10px; background: none;
+  color: var(--muted); font-weight: 700;
+  transition: background .15s, color .15s;
+}
+.view-tab:hover { color: var(--text); }
+.view-tab.active { background: var(--accent); color: var(--accent-text); }
+
+/* Painéis e cabeçalhos de seção */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px;
+}
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.section-head h3 { margin: 0; font-size: 1.05rem; letter-spacing: -.2px; }
+.cal-title .year { color: var(--muted); font-weight: 500; }
+.mini-nav { display: flex; align-items: center; gap: 6px; }
+.mini-nav .chip-btn { margin: 0; }
+
+/* ============================================================
+   HOJE EM DESTAQUE
+   ============================================================ */
+.today-card {
+  position: relative; overflow: hidden;
+  border-radius: 22px; padding: 18px;
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(79, 70, 229, .3);
+}
+.today-card::after {
+  content: ''; position: absolute; right: -60px; top: -60px; width: 200px; height: 200px;
+  border-radius: 50%; background: rgba(255,255,255,.08); pointer-events: none;
+}
+.today-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.today-label { font-size: .75rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; opacity: .8; }
+.today-date { font-size: 1.45rem; font-weight: 800; letter-spacing: -.4px; line-height: 1.2; }
+.today-sub { opacity: .9; margin-top: 2px; }
+.ring { flex-shrink: 0; }
+.ring circle { fill: none; stroke-width: 6; }
+.ring-bg { stroke: rgba(255,255,255,.25); }
+.ring-fg { stroke: #fff; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .4s ease; }
+.ring text { fill: #fff; font-size: 14px; font-weight: 800; }
+.today-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; position: relative; z-index: 1; }
+.today-item {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.14); border-radius: 14px; padding: 8px 10px;
+  backdrop-filter: blur(4px);
+}
+.today-item.done { background: rgba(255,255,255,.24); }
+.today-item.done .today-name span { text-decoration: line-through; opacity: .75; }
+.today-name { flex: 1; min-width: 0; background: none; border: none; color: #fff; text-align: left; padding: 0; display: flex; flex-direction: column; }
+.today-name span { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.today-name small { opacity: .8; font-size: .78rem; }
+.today-card .ghost-btn { color: #fff; border-color: rgba(255,255,255,.5); }
+.today-card .ghost-btn:hover { background: rgba(255,255,255,.12); }
+
+/* Botão de check das rotinas */
+.r-check {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 8px; border: 2px solid var(--c); background: transparent;
+  display: grid; place-items: center; color: #fff; padding: 0;
+  transition: background .12s, transform .08s;
+}
+.r-check svg { opacity: 0; transform: scale(.5); transition: opacity .12s, transform .12s; }
+.r-check:hover:not(:disabled) { background: color-mix(in srgb, var(--c) 18%, transparent); }
+.r-check:active:not(:disabled) { transform: scale(.88); }
+.r-check.done { background: var(--c); }
+.r-check.done svg { opacity: 1; transform: scale(1); }
+.r-check:disabled { opacity: .35; cursor: default; }
+.r-check.lg { width: 32px; height: 32px; border-radius: 10px; border-color: #fff; }
+.r-check.lg.done { background: #fff; color: var(--c); }
+.r-check.lg:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+.r-check.lg.done:hover { background: #fff; }
+.r-check.pop { animation: pop .25s ease; }
+
+/* ============================================================
+   SEMANA EM BLOCOS
+   ============================================================ */
+.week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.week-day {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px;
+  display: flex; flex-direction: column; min-height: 150px; min-width: 0;
+}
+.week-day.today { border: 2px solid var(--accent); background: var(--accent-soft); box-shadow: 0 6px 18px rgba(79,70,229,.18); }
+.week-day.future { opacity: .85; }
+.week-day.complete .week-head .wcount { background: #10b981; color: #fff; }
+.week-head {
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  background: none; border: none; padding: 10px 10px 6px; text-align: left;
+  border-bottom: 1px solid var(--border); border-radius: 14px 14px 0 0;
+}
+.week-head:hover { background: var(--cell-hover); }
+.week-head .wd { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.week-head .dn { font-size: 1.15rem; font-weight: 800; }
+.week-day.today .wd, .week-day.today .dn { color: var(--accent); }
+.wcount { margin-left: auto; font-size: .7rem; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: var(--cell-empty); color: var(--muted); }
+.week-items { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.week-item { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.week-item .r-check { width: 22px; height: 22px; border-radius: 7px; }
+.wi-name { font-size: .82rem; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; flex-direction: column; line-height: 1.2; }
+.wi-name small { font-weight: 500; color: var(--muted); font-size: .7rem; }
+.week-item.done .wi-name { text-decoration: line-through; color: var(--muted); }
+.week-empty { color: var(--muted); text-align: center; padding: 8px 0; opacity: .6; }
+
+/* ============================================================
+   CALENDÁRIO GRANDE
+   ============================================================ */
+.calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-wd { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; padding: 2px 0 4px; }
+.cal-day {
+  min-height: 104px; min-width: 0;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+  padding: 6px; text-align: left; display: flex; flex-direction: column; gap: 4px;
+  transition: background .12s, border-color .12s;
+}
+.cal-day:hover { background: var(--surface-2); border-color: var(--cell-hover); }
+.cal-day.weekend { background: var(--weekend); }
+.cal-day.outside { opacity: .4; }
+.cal-day.today { border: 2px solid var(--accent); background: var(--accent-soft); }
+.cal-day.complete .cal-num::after { content: ' ✓'; color: #10b981; font-weight: 800; }
+.cal-num { font-weight: 700; font-size: .85rem; }
+.cal-day.today .cal-num {
+  background: var(--accent); color: #fff; border-radius: 8px; padding: 1px 7px; align-self: flex-start;
+}
+.cal-items { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cal-chip {
+  display: flex; align-items: center; gap: 5px; min-width: 0;
+  font-size: .72rem; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+}
+.cal-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+.cal-chip em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-chip.done { background: var(--c); color: #fff; }
+.cal-chip.done i { background: #fff; }
+.cal-more { font-size: .7rem; color: var(--muted); font-weight: 700; padding-left: 4px; }
+.cal-dots { display: none; flex-wrap: wrap; gap: 3px; }
+.cal-dots i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--c); }
+.cal-dots i.done { background: var(--c); }
+
+/* ============================================================
+   LISTA DE ROTINAS
+   ============================================================ */
+.routine-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.routine-card {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  border: 1px solid var(--border); background: var(--surface-2); border-radius: 14px; padding: 10px 12px;
+}
+.routine-card:hover { border-color: var(--c); }
+.rc-bar { width: 6px; align-self: stretch; border-radius: 6px; background: var(--c); }
+.rc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rc-info b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-info small { color: var(--muted); font-size: .78rem; }
+.rc-stat { display: flex; flex-direction: column; align-items: flex-end; font-weight: 800; }
+.rc-stat small { font-weight: 500; color: var(--muted); font-size: .68rem; }
+.routine-list .empty { grid-column: 1 / -1; }
+
+/* ============================================================
+   JANELAS DO DIA E DA ROTINA
+   ============================================================ */
+.modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+.day-list { display: flex; flex-direction: column; gap: 8px; }
+.day-item { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 8px 10px; }
+.di-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.di-name small { color: var(--muted); font-size: .78rem; }
+.day-item.done .di-name b { text-decoration: line-through; color: var(--muted); }
+.di-remove { border: none; background: none; color: var(--muted); font-size: .8rem; font-weight: 600; padding: 6px 8px; border-radius: 8px; }
+.di-remove:hover { background: var(--danger-soft); color: var(--danger); }
+#dayAddRow { display: flex; flex-direction: column; gap: 6px; }
+.modal select {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit;
+}
+.day-chips { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.day-chip {
+  padding: 9px 0; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); font-weight: 700; font-size: .82rem; color: var(--muted);
+}
+.day-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.quick-days { display: flex; gap: 12px; flex-wrap: wrap; }
+.link-btn { background: none; border: none; padding: 2px 0; color: var(--accent); font-weight: 600; font-size: .82rem; }
+.link-btn:hover { text-decoration: underline; }
+.modal-text.small { font-size: .8rem; margin: 0; min-height: 0; }
+.modal-text.small:empty { display: none; }
+.opt { text-transform: none; font-weight: 500; letter-spacing: 0; }
+.modal input[type="time"] { max-width: 160px; }
+
+/* ============================================================
+   ROTINAS — RESPONSIVO
+   ============================================================ */
+@media (max-width: 900px) {
+  .week-grid { grid-template-columns: repeat(7, 140px); overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x mandatory; }
+  .week-day { scroll-snap-align: start; }
+}
+@media (max-width: 720px) {
+  .panel { padding: 12px; }
+  .today-date { font-size: 1.2rem; }
+  .today-list { grid-template-columns: 1fr; }
+  .calendar { gap: 4px; }
+  .cal-day { min-height: 58px; padding: 5px 4px; align-items: center; border-radius: 10px; }
+  .cal-items { display: none; }
+  .cal-dots { display: flex; justify-content: center; }
+  .cal-day.today .cal-num { align-self: center; }
+  .cal-day.complete .cal-num::after { content: ''; }
+  .cal-day.complete { box-shadow: inset 0 -3px 0 #10b981; }
+  .routine-list { grid-template-columns: 1fr; }
+  .section-head .primary-btn span { display: none; }
+}
+
+/* ============================================================
    RESPONSIVO
    ============================================================ */
 @media (max-width: 720px) {

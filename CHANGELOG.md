@@ -1,5 +1,57 @@
 # Patch Notes — Habit Tracker
 
+> **Como a versão é numerada (X.Y.Z)**
+> - 🟣 **GRANDE** (função nova, mudança de estrutura) → sobe o número do **meio** (ex.: 1.3.0 → 1.4.0)
+> - 🔹 **PEQUENA** (ajuste, correção, detalhe visual) → sobe o **último** número (ex.: 1.3.0 → 1.3.1)
+>
+> Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
+
+## v1.3.0 — 11/11/2026 · "Rotinas" (🟣 GRANDE)
+
+### ✨ Novidades
+- 🟣 **GRANDE — Aba Rotinas:** o app agora tem duas abas no topo, **Hábitos** e **Rotinas**. Ele lembra qual aba você deixou aberta.
+- 🟣 **GRANDE — Rotinas com programação:** cada rotina tem os próprios dias da semana. Exemplo: *Academia* todos os dias e *Estudar* só terça e quarta. O horário é opcional e as rotinas aparecem ordenadas por ele.
+- 🟣 **GRANDE — Hoje em destaque:** um cartão grande no topo mostra a data de hoje, as rotinas do dia e um anel com a % concluída. Dá para marcar como feita ali mesmo.
+- 🟣 **GRANDE — Semana em blocos:** sete blocos (Dom a Sáb), cada um com as rotinas do dia e um contador (ex.: 1/3).
+  - O dia de hoje fica destacado.
+  - As setas ‹ › trocam de semana.
+  - No celular, os blocos rolam de lado e já abrem no dia de hoje.
+- 🟣 **GRANDE — Calendário grande do mês:** cada dia mostra as rotinas com a cor delas. As feitas aparecem preenchidas.
+  - Dia com tudo feito ganha um ✓ verde, e hoje fica destacado.
+  - No celular, as rotinas viram bolinhas coloridas.
+- 🟣 **GRANDE — Marcar rotina como feita:** em qualquer dia, pelo cartão de hoje, pela semana, pelo calendário ou pela janela do dia. Dias futuros não podem ser marcados.
+- 🟣 **GRANDE — Janela do dia:** toque em qualquer dia da semana ou do calendário para:
+  - ver e marcar as rotinas daquele dia;
+  - **adicionar uma rotina só naquele dia** (ex.: estudar numa sexta);
+  - **tirar uma rotina só daquele dia**, sem mudar a programação;
+  - criar uma rotina nova a partir dali. Se você não escolher dias da semana, ela entra só naquele dia.
+- 🟣 **GRANDE — Janela da rotina:**
+  - Nome, dias da semana (com atalhos *Todos os dias*, *Dias úteis* e *Limpar*), horário e cor.
+  - Estatísticas: feitas nos últimos 30 dias, % de conclusão e total feitas.
+  - Excluir, com opção de desfazer.
+- 🟣 **GRANDE — Lista "Minhas rotinas":** cada cartão mostra a programação (ex.: "Ter, Qua · 19:00") e a % de conclusão dos últimos 30 dias.
+- 🔹 **PEQUENA — Rodapé por aba:** na aba Rotinas, o rodapé mostra quantas rotinas existem e quantas foram feitas hoje.
+
+### 🧱 Estrutura do código
+- 🟣 **GRANDE — Classes para separar rotinas de hábitos:** novo arquivo `www/models.js`.
+  - `Registro` é a base comum (id, nome, cor).
+  - `Habit` é o hábito: marcação diária, sequências e % do mês.
+  - `Routine` é a rotina: dias da semana, horário, dias avulsos, dias pulados, data de início e dias feitos. Ela também sabe dizer se acontece numa data (`isScheduledOn`).
+- 🟣 **GRANDE — Código da aba Rotinas separado** em `www/routines.js`.
+- 🔹 **PEQUENA — Inicialização do app:** agora só acontece depois que todos os arquivos carregam.
+
+### 🛠️ Servidor
+- 🟣 **GRANDE — Novas tabelas** `routines` e `routine_done`, criadas sozinhas ao ligar o servidor.
+- 🟣 **GRANDE — Novas rotas** `/api/routines`: listar, criar, editar, excluir e `PUT /api/routines/:id/done/:data` para marcar feita.
+- 🟣 **GRANDE — Sincronização das rotinas:** funciona igual à dos hábitos, inclusive offline com fila. No primeiro login, as rotinas do aparelho também são enviadas.
+- 🔹 **PEQUENA — Login organizado:** a verificação de login virou um arquivo só (`backend/requireAuth.js`), usado por hábitos e rotinas.
+- 🔹 **PEQUENA — Backup completo:** o backup (exportar/importar JSON) agora inclui as rotinas.
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.3.0` (versionCode 3).
+
+---
+
 ## v1.2.0 — 11/11/2026 · "Nuvem em casa"
 
 ### ✨ Novidades
