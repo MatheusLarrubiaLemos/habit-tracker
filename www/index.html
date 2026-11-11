@@ -8,16 +8,33 @@
   <link rel="stylesheet" href="habit-tracker.css">
 </head>
 <body>
+  <!-- ==================== MENU (lateral no PC, barra de baixo no celular) ==================== -->
+  <nav class="sidenav" aria-label="Menu principal">
+    <button class="sidenav-brand" id="sideBrand" data-nav="home" title="Início">
+      <span class="logo"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <b>Habit Tracker</b>
+    </button>
+      <button class="nav-item" data-nav="home"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 11l8-7 8 7v8a2 2 0 0 1-2 2h-3v-6H9v6H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Início</span></button>
+      <button class="nav-item" data-nav="habits"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor"/></svg><span>Hábitos</span></button>
+      <button class="nav-item" data-nav="routines"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Rotinas</span></button>
+    <span class="nav-spacer"></span>
+      <button class="nav-item" data-nav="manage"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>Configurar</span></button>
+  </nav>
+
   <div class="app">
 
     <!-- ==================== CABEÇALHO ==================== -->
     <header class="topbar">
       <div class="brand">
-        <div class="logo" aria-hidden="true">
+        <button class="back-btn" id="homeBtn" title="Voltar para o Início" hidden>
+          <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Início</span>
+        </button>
+        <button class="logo logo-btn" id="brandBtn" title="Início" aria-label="Ir para o Início">
           <svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
+        </button>
         <div>
-          <h1>Habit Tracker</h1>
+          <h1 id="pageTitle">Habit Tracker</h1>
           <p class="subtitle" id="greeting">Sua rotina, um dia de cada vez</p>
         </div>
       </div>
@@ -37,22 +54,48 @@
       </div>
     </header>
 
-    <!-- ==================== ABAS PRINCIPAIS ==================== -->
-    <nav class="view-tabs" role="tablist">
-      <button class="view-tab" data-view="habits" role="tab">
-        <svg viewBox="0 0 24 24" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="2" fill="currentColor"/></svg>
-        Hábitos
-      </button>
-      <button class="view-tab" data-view="routines" role="tab">
-        <svg viewBox="0 0 24 24" width="18" height="18"><rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Rotinas
-      </button>
-    </nav>
+    <!-- =============================================================
+         INÍCIO — resumão unificado
+         ============================================================= -->
+    <div id="homeView" class="view">
+      <section class="today-card hero" id="homeHero"></section>
+      <section class="stats home-stats" id="homeStats"></section>
+
+      <div class="home-grid">
+        <section class="panel">
+          <div class="section-head">
+            <h3>Rotinas de hoje</h3>
+            <a href="#" class="link-btn" data-go="routines">Ver calendário ›</a>
+          </div>
+          <div class="home-list" id="homeRoutines"></div>
+        </section>
+        <section class="panel">
+          <div class="section-head">
+            <h3>Hábitos de hoje</h3>
+            <a href="#" class="link-btn" data-go="habits">Ver grade ›</a>
+          </div>
+          <div class="home-list" id="homeHabits"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <h3>Sua semana</h3>
+          <span class="muted small">hábitos + rotinas · toque num dia</span>
+        </div>
+        <div class="home-week" id="homeWeek"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head"><h3>Amanhã</h3></div>
+        <div class="home-tomorrow" id="homeTomorrow"></div>
+      </section>
+    </div>
 
     <!-- =============================================================
-         ABA HÁBITOS
+         HÁBITOS
          ============================================================= -->
-    <div id="habitsView" class="view">
+    <div id="habitsView" class="view" hidden>
     <!-- ==================== NAVEGAÇÃO DE MÊS ==================== -->
     <section class="month-nav">
       <button id="prevMonthBtn" class="nav-btn" aria-label="Mês anterior">
@@ -66,6 +109,10 @@
         <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <button id="todayBtn" class="chip-btn">Hoje</button>
+      <button id="newHabitBtn" class="primary-btn small-btn" title="Novo hábito">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>Novo hábito</span>
+      </button>
     </section>
 
     <div class="tabs" id="tabs"></div>
@@ -73,31 +120,22 @@
     <!-- ==================== RESUMO ==================== -->
     <section class="stats" id="stats"></section>
 
-    <!-- ==================== ADICIONAR HÁBITO ==================== -->
-    <form class="add-habit" id="addHabitForm" autocomplete="off">
-      <input id="habitNameInput" type="text" placeholder="Novo hábito (ex.: Beber 2L de água)" maxlength="60">
-      <div class="swatches" id="addSwatches"></div>
-      <button type="submit" id="addHabitBtn" class="primary-btn">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
-        <span>Adicionar</span>
-      </button>
-    </form>
-
     <!-- ==================== GRADE PRINCIPAL ==================== -->
     <section class="table-wrap" id="tableWrap">
       <table id="habitTable"></table>
       <div class="empty" id="emptyState" hidden>
         <div class="empty-icon">🌱</div>
         <h3>Nenhum hábito ainda</h3>
-        <p>Adicione seu primeiro hábito acima e comece a marcar os dias.</p>
+        <p>Toque em “Novo hábito” para criar o primeiro.</p>
       </div>
     </section>
 
     <p class="hint">Toque num quadrado para marcar o dia · Toque no nome do hábito para editar</p>
     </div>
 
+
     <!-- =============================================================
-         ABA ROTINAS
+         ROTINAS
          ============================================================= -->
     <div id="routinesView" class="view" hidden>
       <!-- Hoje em destaque -->
@@ -108,6 +146,10 @@
         <div class="section-head">
           <h3>Semana</h3>
           <div class="mini-nav">
+            <button id="newRoutineBtn" class="primary-btn small-btn" title="Nova rotina">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              <span>Nova rotina</span>
+            </button>
             <button id="prevWeekBtn" class="nav-btn" aria-label="Semana anterior"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <button id="thisWeekBtn" class="chip-btn"><span id="weekLabel">Esta semana</span></button>
             <button id="nextWeekBtn" class="nav-btn" aria-label="Próxima semana"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -129,19 +171,65 @@
         <div class="calendar" id="calendar"></div>
       </section>
 
-      <!-- Lista de rotinas -->
+      <p class="hint">Toque no ✓ para marcar como feita · Toque num dia para adicionar ou tirar rotinas</p>
+    </div>
+
+
+    <!-- =============================================================
+         CONFIGURAR — hábitos, rotinas e preferências
+         ============================================================= -->
+    <div id="manageView" class="view" hidden>
+
       <section class="panel">
         <div class="section-head">
-          <h3>Minhas rotinas</h3>
-          <button id="newRoutineBtn" class="primary-btn">
-            <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <div><h3>Hábitos</h3><span class="muted small">coisas que você marca todo dia</span></div>
+          <button id="manageNewHabit" class="primary-btn small-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <span>Novo hábito</span>
+          </button>
+        </div>
+        <div class="routine-list" id="manageHabits"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div><h3>Rotinas</h3><span class="muted small">atividades com dias e horário certos</span></div>
+          <button id="manageNewRoutine" class="primary-btn small-btn">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
             <span>Nova rotina</span>
           </button>
         </div>
         <div class="routine-list" id="routineList"></div>
       </section>
 
-      <p class="hint">Toque no ✓ para marcar como feita · Toque num dia para adicionar ou tirar rotinas</p>
+      <section class="panel">
+        <div class="section-head"><h3>Preferências</h3></div>
+        <div class="settings">
+          <div class="setting">
+            <div><b>Tema</b><small>Claro, escuro ou igual ao do aparelho</small></div>
+            <div class="seg">
+              <button data-theme-opt="light">Claro</button>
+              <button data-theme-opt="dark">Escuro</button>
+              <button data-theme-opt="system">Auto</button>
+            </div>
+          </div>
+          <div class="setting">
+            <div><b>Conta e servidor</b><small id="manageAccount">—</small></div>
+            <button class="ghost-btn" id="manageAccountBtn">Abrir</button>
+          </div>
+          <div class="setting">
+            <div><b>Backup</b><small>Salvar ou restaurar tudo num arquivo</small></div>
+            <div class="row-btns">
+              <button class="ghost-btn" id="manageExportBtn">Exportar</button>
+              <label class="ghost-btn" for="importFileInput">Importar</label>
+            </div>
+          </div>
+          <div class="setting">
+            <div><b>Versão</b><small>Notas de cada versão no CHANGELOG.md</small></div>
+            <span class="muted" id="manageVersion">—</span>
+          </div>
+        </div>
+      </section>
     </div>
 
     <footer class="footer">
@@ -264,5 +352,6 @@
   <script src="models.js" defer></script>
   <script src="habit-tracker.js" defer></script>
   <script src="routines.js" defer></script>
+  <script src="home.js" defer></script>
 </body>
 </html>

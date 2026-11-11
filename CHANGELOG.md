@@ -6,6 +6,43 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.4.0 — 11/11/2026 · "Início" (🟣 GRANDE)
+
+### ✨ Novidades
+- 🟣 **GRANDE — Tela Início (resumão unificado):** é a primeira tela do app e junta tudo num lugar só.
+  - **Destaque do dia:** saudação, data e um anel com a % de tudo que foi feito hoje (hábitos + rotinas), além de quanto falta para fechar o dia.
+  - **Resumão em cartões:** rotinas hoje, hábitos hoje, % da semana, % dos hábitos no mês e maior sequência 🔥. Tocar em *Rotinas hoje* ou *Hábitos hoje* abre a tela correspondente.
+  - **Rotinas de hoje** (com horário) e **Hábitos de hoje** lado a lado, marcados com as etiquetas *Rotina* e *Hábito*. Dá para marcar como feito direto ali.
+  - **Sua semana:** 7 dias com uma barrinha de progresso (hábitos + rotinas). O dia de hoje fica em destaque e tocar num dia abre a janela daquele dia.
+  - **Amanhã:** as rotinas programadas para o dia seguinte.
+- 🟣 **GRANDE — Menu principal:** no PC fica **na lateral esquerda**. No celular vira uma **barra fixa embaixo**, como nos apps de celular. Os itens são **Início, Hábitos, Rotinas e Configurar**, e o Configurar fica no canto (embaixo no PC, último à direita no celular).
+- 🟣 **GRANDE — Tela Configurar:** um lugar só para gerenciar o app.
+  - **Hábitos:** lista com sequência atual e melhor sequência, botão *Novo hábito* e editar.
+  - **Rotinas:** lista com a programação e a % dos últimos 30 dias, botão *Nova rotina* e editar.
+  - **Preferências:** tema (Claro / Escuro / Auto), conta e servidor, backup (exportar/importar) e versão do app.
+- 🟣 **GRANDE — Voltar para o Início:**
+  - O botão **‹ Início** aparece no topo em qualquer outra tela.
+  - O item **Início** do menu também volta.
+  - No celular, tocar no logo volta para o Início.
+
+### 🔄 Mudanças
+- 🔹 **PEQUENA — Criar hábito:** agora é pelo botão **+ Novo hábito**, que abre a mesma janela de edição com nome e cor. A barra de adicionar que ficava acima da grade saiu.
+- 🔹 **PEQUENA — Lista de rotinas:** saiu da tela Rotinas e foi para o **Configurar**. Na tela Rotinas, o botão **+ Nova rotina** fica ao lado da Semana.
+- 🔹 **PEQUENA — Título do topo:** mostra o nome da tela aberta (Hábitos, Rotinas, Configurar).
+- 🔹 **PEQUENA — Lembra a última tela:** o app lembra a última tela aberta. Na primeira vez, abre no Início.
+- 🔹 **PEQUENA — Rodapé:** mostra o total de hábitos e rotinas e a versão do app.
+- 🔹 **PEQUENA — Avisos no celular:** os avisos rápidos (toasts) ficam acima da barra de baixo, sem cobrir o menu.
+- 🔹 **PEQUENA — Meses dos hábitos:** ao abrir Hábitos no celular, a fileira de meses já rola até o mês atual.
+
+### 🧱 Estrutura do código
+- 🔹 **PEQUENA — Novo arquivo** `www/home.js`, com as telas Início e Configurar.
+- 🔹 **PEQUENA — Telas sempre atualizadas:** qualquer mudança em hábito ou rotina atualiza a tela que estiver aberta.
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.4.0` (versionCode 4).
+
+---
+
 ## v1.3.0 — 11/11/2026 · "Rotinas" (🟣 GRANDE)
 
 ### ✨ Novidades

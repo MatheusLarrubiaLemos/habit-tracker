@@ -3,7 +3,10 @@
 // ============================================================
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
-const STORAGE_KEY = 'habitTrackerData_v1';   // mesma chave de antes: seus dados continuam
+const STORAGE_KEY = 'habitTrackerData_v1';
+const APP_VERSION = '1.4.0';
+const VIEWS = ['home', 'habits', 'routines', 'manage'];
+const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Rotinas', manage: 'Configurar' };   // mesma chave de antes: seus dados continuam
 const PALETTE = ['#10b981','#06b6d4','#3b82f6','#6366f1','#a855f7','#ec4899','#f43f5e','#f59e0b'];
 
 const today = new Date();
@@ -15,7 +18,7 @@ let state = {
   activeMonth: TODAY.m,
   color: PALETTE[0],
   darkMode: null,            // null = segue o tema do sistema
-  view: 'habits',            // aba aberta: 'habits' | 'routines'
+  view: 'home',              // tela aberta: 'home' | 'habits' | 'routines' | 'manage'
   habits: [],                // lista de Habit   (ver models.js)
   routines: []               // lista de Routine (ver models.js)
 };
@@ -102,7 +105,7 @@ function normalizeState() {
   state.habits = state.habits.map(h => h instanceof Habit ? h : new Habit(h));
   if (!Array.isArray(state.routines)) state.routines = [];
   state.routines = state.routines.map(r => r instanceof Routine ? r : new Routine(r));
-  if (!['habits', 'routines'].includes(state.view)) state.view = 'habits';
+  if (!VIEWS.includes(state.view)) state.view = 'home';
 }
 
 function loadState() {
@@ -296,11 +299,16 @@ function renderTable() {
 
 function renderFooter() {
   if (state.view === 'routines') return renderRoutinesFooter();
+  if (state.view !== 'habits') {
+    $('summary').textContent = `${state.habits.length} hábito${state.habits.length === 1 ? '' : 's'} · ${state.routines.length} rotina${state.routines.length === 1 ? '' : 's'} · v${APP_VERSION}`;
+    return;
+  }
   const total = state.habits.reduce((s, h) => s + countMonthMarks(h, state.year, state.activeMonth), 0);
   $('summary').textContent = `${total} marcações em ${MONTHS[state.activeMonth]} · ${state.habits.length} hábito${state.habits.length === 1 ? '' : 's'}`;
 }
 
 function scrollToToday() {
+  $('tabs').querySelector('.active')?.scrollIntoView({ block: 'nearest', inline: 'center' });
   if (state.year !== TODAY.y || state.activeMonth !== TODAY.m) { $('tableWrap').scrollLeft = 0; return; }
   const th = document.querySelector('#habitTable thead th.today');
   const wrap = $('tableWrap');
@@ -315,22 +323,32 @@ function render() {
   renderView();
 }
 
-/** Desenha a aba aberta (Hábitos ou Rotinas). */
+/** Desenha a tela aberta (Início, Hábitos, Rotinas ou Configurar). */
 function renderView() {
-  const isHabits = state.view === 'habits';
-  $('habitsView').hidden = !isHabits;
-  $('routinesView').hidden = isHabits;
-  document.querySelectorAll('.view-tab').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
-  if (isHabits) { renderStats(); renderTable(); }
-  else renderRoutines();
+  const v = state.view;
+  VIEWS.forEach(name => { $(name + 'View').hidden = name !== v; });
+  document.querySelectorAll('[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === v);
+    b.setAttribute('aria-current', b.dataset.nav === v ? 'page' : 'false');
+  });
+  $('homeBtn').hidden = v === 'home';
+  $('pageTitle').textContent = v === 'home' ? 'Habit Tracker' : VIEW_TITLES[v];
+  if (v === 'home') renderHome();
+  else if (v === 'habits') { renderStats(); renderTable(); }
+  else if (v === 'routines') renderRoutines();
+  else renderManage();
+  renderFooter();
 }
 
 function setView(view) {
+  if (!VIEWS.includes(view)) view = 'home';
   state.view = view;
   saveState();
   renderView();
-  requestAnimationFrame(view === 'habits' ? scrollToToday : scrollWeekToToday);
+  window.scrollTo({ top: 0 });
+  requestAnimationFrame(view === 'habits' ? scrollToToday : view === 'routines' ? scrollWeekToToday : () => {});
 }
+const goHome = () => setView('home');
 
 // ============================================================
 // NAVEGAÇÃO
@@ -348,23 +366,25 @@ function goTo(y, m) {
 // ============================================================
 // AÇÕES DOS HÁBITOS
 // ============================================================
-let newHabitColor = PALETTE[0];
-
-function addHabit(name) {
-  name = (name || '').trim();
-  if (!name) { toast('Digite o nome do hábito'); $('habitNameInput').focus(); return; }
-  const habit = new Habit({ name, color: newHabitColor });
+function addHabit(name, color) {
+  const habit = new Habit({ name, color });
   state.habits.push(habit);
   queueOp({ t: 'create', id: habit.id });
-  state.color = newHabitColor;
-  // Próxima cor da paleta para o próximo hábito
-  const i = PALETTE.indexOf(newHabitColor);
-  if (i >= 0) newHabitColor = PALETTE[(i + 1) % PALETTE.length];
-  renderSwatches($('addSwatches'), newHabitColor, c => newHabitColor = c);
+  state.color = color;
   saveState();
   render();
-  $('habitNameInput').value = '';
-  toast(`“${name}” adicionado`);
+  toast(`Hábito “${habit.name}” criado`);
+}
+
+/** Marca/desmarca HOJE um hábito (usado na tela Início) */
+function toggleHabitToday(id) {
+  const h = state.habits.find(x => x.id === id);
+  if (!h) return;
+  const marked = h.toggle(TODAY.y, TODAY.m, TODAY.d);
+  saveState();
+  queueOp({ t: 'mark', id: h.id, date: keyToIso(markKey(TODAY.y, TODAY.m, TODAY.d)), marked });
+  if (marked && navigator.vibrate) navigator.vibrate(12);
+  renderView();
 }
 
 function toggleMark(habitId, day, cellEl) {
@@ -409,20 +429,27 @@ function updateRow(h) {
 let editingId = null;
 let editColor = null;
 
+/** Abre a janela do hábito. Sem id = criar um novo. */
 function openEdit(id) {
-  const h = state.habits.find(x => x.id === id);
-  if (!h) return;
-  editingId = id;
-  editColor = h.color;
-  $('editNameInput').value = h.name;
+  const h = id ? state.habits.find(x => x.id === id) : null;
+  if (id && !h) return;
+  editingId = h ? h.id : null;
+  editColor = h ? h.color : PALETTE[state.habits.length % PALETTE.length];
+  $('editTitle').textContent = h ? 'Editar hábito' : 'Novo hábito';
+  $('editNameInput').value = h ? h.name : '';
+  $('editNameInput').placeholder = 'ex.: Beber 2L de água, Meditar';
+  $('deleteHabitBtn').hidden = !h;
+  $('editStats').hidden = !h;
+  $('saveEditBtn').textContent = h ? 'Salvar' : 'Criar hábito';
   renderSwatches($('editSwatches'), editColor, c => editColor = c);
+  $('editModal').hidden = false;
+  setTimeout(() => $('editNameInput').focus(), 50);
+  if (!h) return;
   const total = Object.keys(h.marks).length;
   $('editStats').innerHTML = `
     <div><b>🔥 ${currentStreak(h)}</b><span>Sequência atual</span></div>
     <div><b>${bestStreak(h)}</b><span>Melhor sequência</span></div>
     <div><b>${total}</b><span>Dias no total</span></div>`;
-  $('editModal').hidden = false;
-  setTimeout(() => $('editNameInput').focus(), 50);
 }
 
 function closeEdit() {
@@ -431,10 +458,11 @@ function closeEdit() {
 }
 
 function saveEdit() {
+  const name = $('editNameInput').value.trim();
+  if (!name) { toast('Dê um nome para o hábito'); $('editNameInput').focus(); return; }
+  if (!editingId) { const c = editColor; closeEdit(); return addHabit(name, c); }
   const h = state.habits.find(x => x.id === editingId);
   if (!h) return closeEdit();
-  const name = $('editNameInput').value.trim();
-  if (!name) { toast('O nome não pode ficar vazio'); return; }
   h.name = name;
   h.color = editColor;
   saveState();
@@ -835,7 +863,7 @@ function logout() {
 // EVENTOS
 // ============================================================
 function bindEvents() {
-  $('addHabitForm').addEventListener('submit', (e) => { e.preventDefault(); addHabit($('habitNameInput').value); });
+  $('newHabitBtn').onclick = () => openEdit(null);
 
   $('prevMonthBtn').onclick = () => goTo(state.year, state.activeMonth - 1);
   $('nextMonthBtn').onclick = () => goTo(state.year, state.activeMonth + 1);
@@ -872,8 +900,15 @@ function bindEvents() {
   $('editModal').addEventListener('click', (e) => { if (e.target.id === 'editModal') closeEdit(); });
   $('editNameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveEdit(); });
 
-  // Abas Hábitos / Rotinas
-  document.querySelectorAll('.view-tab').forEach(b => b.onclick = () => setView(b.dataset.view));
+  // Navegação: menu lateral (PC) / barra de baixo (celular), botão Início e logo
+  document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => setView(b.dataset.nav));
+  $('homeBtn').onclick = goHome;
+  $('brandBtn').onclick = goHome;
+  // Qualquer elemento com data-go="tela" leva para essa tela (ex.: links da Início)
+  document.addEventListener('click', (e) => {
+    const go = e.target.closest('[data-go]');
+    if (go) { e.preventDefault(); setView(go.dataset.go); }
+  });
 
   // Conta e sincronização
   $('accountBtn').onclick = openAccount;
@@ -907,11 +942,9 @@ function bindEvents() {
 document.addEventListener('DOMContentLoaded', function init() {
   loadState();
   loadSync();
-  newHabitColor = PALETTE[state.habits.length % PALETTE.length];
-  renderSwatches($('addSwatches'), newHabitColor, c => newHabitColor = c);
   bindEvents();
   render();
   setSyncStatus(loggedIn() ? 'syncing' : 'local');
-  requestAnimationFrame(state.view === 'habits' ? scrollToToday : scrollWeekToToday);
+  requestAnimationFrame(state.view === 'habits' ? scrollToToday : state.view === 'routines' ? scrollWeekToToday : () => {});
   if (loggedIn()) syncNow();
 });

@@ -38,8 +38,6 @@ function renderRoutines() {
   renderTodayCard();
   renderWeek();
   renderCalendar();
-  renderRoutineList();
-  renderFooter();
 }
 
 function renderTodayCard() {
@@ -187,16 +185,16 @@ function toggleRoutine(rid, iso) {
   saveState();
   queueOp({ t: 'mark', k: 'routine', id: r.id, date: iso, done: value });
   if (value && navigator.vibrate) navigator.vibrate(12);
-  renderRoutines();
+  renderView();
   if (openDayIso) renderDayModal();
-  const el = document.querySelector(`#routinesView .r-check[data-rid="${rid}"][data-date="${iso}"]`);
+  const el = document.querySelector(`.view:not([hidden]) .r-check[data-rid="${rid}"][data-date="${iso}"]`);
   if (el && value) el.classList.add('pop');
 }
 
 function changeRoutineSchedule(r) {
   saveState();
   queueOp({ t: 'update', k: 'routine', id: r.id });
-  renderRoutines();
+  renderView();
   if (openDayIso) renderDayModal();
 }
 
@@ -289,7 +287,7 @@ function saveRoutine() {
     toast(`Rotina “${r.name}” criada`);
   }
   closeRoutine();
-  renderRoutines();
+  renderView();
   if (openDayIso) renderDayModal();
 }
 
@@ -300,10 +298,10 @@ function deleteRoutine() {
   saveState();
   queueDelete(removed);
   closeRoutine();
-  renderRoutines();
+  renderView();
   toast(`“${removed.name}” excluída`, {
     label: 'Desfazer',
-    run: () => { state.routines.splice(idx, 0, removed); saveState(); queueRestore(removed); renderRoutines(); }
+    run: () => { state.routines.splice(idx, 0, removed); saveState(); queueRestore(removed); renderView(); }
   });
 }
 
