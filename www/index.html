@@ -2,72 +2,107 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Habit Tracker — App Local</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4f46e5">
+  <title>Habit Tracker</title>
   <link rel="stylesheet" href="habit-tracker.css">
 </head>
 <body>
   <div class="app">
-    <!-- ==================== CABEÇALHO ==================== -->
-    <header>
-      <!-- Lado esquerdo: título e navegação de anos -->
-      <div>
-        <h1>📅 Habit Tracker</h1>
-        <div class="year-nav">
-          <button id="prevYearBtn" class="year-btn" title="Ano anterior">«</button>
-          <span id="currentYear" class="current-year"></span>
-          <button id="nextYearBtn" class="year-btn" title="Próximo ano">»</button>
-        </div>
-        <div id="monthYear" class="month-year-display">--</div>
-      </div>
 
-      <!-- Lado direito: botões de tema e configurações -->
-      <div class="top-right">
-        <button id="darkToggle" class="icon-btn" title="Alternar modo claro/escuro">🌙</button>
-        <button id="optionsBtn" class="icon-btn" title="Configurações">⚙️</button>
+    <!-- ==================== CABEÇALHO ==================== -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h1>Habit Tracker</h1>
+          <p class="subtitle" id="greeting">Sua rotina, um dia de cada vez</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="darkToggle" class="icon-btn" title="Alternar tema" aria-label="Alternar tema"></button>
+        <div class="menu-wrap">
+          <button id="optionsBtn" class="icon-btn" title="Opções" aria-label="Opções">
+            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg>
+          </button>
+          <div id="optionsPanel" class="dropdown-menu" role="menu">
+            <button id="exportBtn" role="menuitem">Exportar backup (JSON)</button>
+            <label for="importFileInput" class="menu-item" role="menuitem">Importar backup (JSON)</label>
+            <input type="file" id="importFileInput" accept=".json,application/json" hidden>
+          </div>
+        </div>
       </div>
     </header>
 
-    <!-- ==================== ABAS DOS MESES ==================== -->
-    <!-- As abas serão preenchidas dinamicamente pelo JavaScript -->
+    <!-- ==================== NAVEGAÇÃO DE MÊS ==================== -->
+    <section class="month-nav">
+      <button id="prevMonthBtn" class="nav-btn" aria-label="Mês anterior">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="month-title">
+        <span id="monthName">--</span>
+        <span id="yearName" class="year">--</span>
+      </div>
+      <button id="nextMonthBtn" class="nav-btn" aria-label="Próximo mês">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="todayBtn" class="chip-btn">Hoje</button>
+    </section>
+
     <div class="tabs" id="tabs"></div>
 
-    <!-- ==================== CONTROLES PRINCIPAIS ==================== -->
-    <div class="controls">
-      <!-- Seletor de cores compacto (botão + preview) -->
-      <div class="color-selector">
-        <button id="colorPickerBtn" class="icon-btn" title="Escolher cor do hábito">🎨</button>
-        <input type="color" id="colorPicker" style="display: none;">
-        <span id="colorPreview" class="color-preview"></span>
+    <!-- ==================== RESUMO ==================== -->
+    <section class="stats" id="stats"></section>
+
+    <!-- ==================== ADICIONAR HÁBITO ==================== -->
+    <form class="add-habit" id="addHabitForm" autocomplete="off">
+      <input id="habitNameInput" type="text" placeholder="Novo hábito (ex.: Beber 2L de água)" maxlength="60">
+      <div class="swatches" id="addSwatches"></div>
+      <button type="submit" id="addHabitBtn" class="primary-btn">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <span>Adicionar</span>
+      </button>
+    </form>
+
+    <!-- ==================== GRADE PRINCIPAL ==================== -->
+    <section class="table-wrap" id="tableWrap">
+      <table id="habitTable"></table>
+      <div class="empty" id="emptyState" hidden>
+        <div class="empty-icon">🌱</div>
+        <h3>Nenhum hábito ainda</h3>
+        <p>Adicione seu primeiro hábito acima e comece a marcar os dias.</p>
       </div>
+    </section>
 
-      <!-- Adicionar novo hábito -->
-      <div class="add-habit">
-        <input id="habitNameInput" type="text" placeholder="Nome do hábito">
-        <button id="addHabitBtn">Adicionar</button>
+    <p class="hint">Toque num quadrado para marcar o dia · Toque no nome do hábito para editar</p>
+
+    <footer class="footer">
+      <span id="summary">--</span>
+      <span class="save-status">Salvo neste dispositivo</span>
+    </footer>
+  </div>
+
+  <!-- ==================== MODAL DE EDIÇÃO ==================== -->
+  <div class="modal-backdrop" id="editModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+      <h2 id="editTitle">Editar hábito</h2>
+      <label class="field-label" for="editNameInput">Nome</label>
+      <input id="editNameInput" type="text" maxlength="60">
+      <span class="field-label">Cor</span>
+      <div class="swatches" id="editSwatches"></div>
+      <div class="habit-stats" id="editStats"></div>
+      <div class="modal-actions">
+        <button id="deleteHabitBtn" class="danger-btn">Excluir</button>
+        <span class="spacer"></span>
+        <button id="cancelEditBtn" class="ghost-btn">Cancelar</button>
+        <button id="saveEditBtn" class="primary-btn">Salvar</button>
       </div>
-    </div>
-    
-    <!-- ==================== TABELA PRINCIPAL ==================== -->
-    <div class="table-wrap">
-      <table id="habitTable">
-        <!-- Cabeçalho e linhas gerados pelo JavaScript -->
-      </table>
-    </div>
-
-    <!-- ==================== MENU DE CONFIGURAÇÕES (DROPDOWN) ==================== -->
-    <div id="optionsPanel" class="dropdown-menu">
-      <button id="exportBtn">📤 Exportar JSON</button>
-      <label for="importFileInput" class="import-label">📥 Importar JSON</label>
-      <input type="file" id="importFileInput" accept=".json" style="display: none;">
-    </div>
-
-    <!-- ==================== RODAPÉ ==================== -->
-    <div class="footer">
-      <div id="summary">--</div>
-      <div class="save-status">Salvo localmente no navegador</div>
     </div>
   </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="habit-tracker.js" defer></script>
 </body>
