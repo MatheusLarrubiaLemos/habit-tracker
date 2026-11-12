@@ -4,7 +4,7 @@
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const STORAGE_KEY = 'habitTrackerData_v1';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const VIEWS = ['home', 'habits', 'routines', 'manage'];
 // 'routines' é o nome interno da tela Agenda (rotinas + compromissos); mantido para não perder a tela salva
 const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Agenda', manage: 'Configurar' };
