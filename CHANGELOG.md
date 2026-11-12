@@ -6,6 +6,25 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
+
+### 🧱 Estrutura do código
+- 🔹 **PEQUENA — Novo `CLAUDE.md` na raiz:** junta as regras do projeto num lugar só. Ele explica:
+  - como registrar mudanças no CHANGELOG (🟣 GRANDE ou 🔹 PEQUENA);
+  - os 4 lugares onde fica a versão;
+  - as classes `Habit`, `Routine` e `Appointment`;
+  - as 3 versões por aparelho e os `id`s que não podem ser apagados;
+  - que os textos do app ficam em português.
+- 🔹 **PEQUENA — Arquivos antigos conferidos:** `www/css/`, `www/habit-tracker.css`, `www/models.js`, `www/habit-tracker.js`, `www/routines.js`, `www/home.js` e `railway.json` já não estão no repositório, e nada aponta para eles. Se ainda existirem na sua pasta, pode apagar.
+
+### 🛠️ Servidor
+- 🔹 **PEQUENA — Teste do servidor:** o backend liga sem erro e responde em `/api/health`.
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.6.1` (versionCode 7).
+
+---
+
 ## v1.6.0 — 11/11/2026 · "Agenda e compromissos" (🟣 GRANDE)
 
 ### ✨ Novidades
