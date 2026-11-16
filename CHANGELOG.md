@@ -6,6 +6,66 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.7.0 — 16/11/2026 · "iPhone e Android" (🟣 GRANDE)
+
+### 🧱 Estrutura do código
+- 🔹 **PEQUENA — Capacitor atualizado para 8.6.2** (`cli`, `core`, `android`). O plugin de notificações foi para 8.3.1.
+- 🔹 **PEQUENA — Node.js 22 ou mais novo** passa a ser obrigatório (era 20). Está no `package.json`, no `backend/package.json` e no README.
+- 🔹 **PEQUENA — `package-lock.json` limpo:** saíram as dependências antigas do servidor que tinham ficado na raiz.
+- 🔹 **PEQUENA — `android/gradlew` executável:** o arquivo foi criado no Windows e não rodava no Linux nem no Mac (necessário para o build automático).
+
+### 🛠️ Conexão com o servidor do PC
+- 🟣 **GRANDE — Chamadas pelo lado nativo (CapacitorHttp):** no iPhone e no Android, o app fala com o servidor pelo sistema, e não pelo navegador interno. Assim o iPhone não bloqueia o servidor `http://192.168…` do PC.
+- 🔹 **PEQUENA — Android em `https://localhost`:** o app passa a abrir no endereço interno padrão do Capacitor. As regras de HTTP ficam num arquivo próprio, `network_security_config.xml`, que explica quando dá para fechar o HTTP de vez.
+- 🔹 **PEQUENA — Tempo limite que funciona no celular:** se o servidor não responde, o app desiste depois de 8 segundos e mostra "Servidor fora do ar". Antes, no app nativo, a espera podia não ter fim.
+- 🔹 **PEQUENA — "Testar" mais claro:** diz se o endereço responde mas não é o Habit Tracker (porta errada). Se não achar o servidor, lista o que conferir: janela aberta, mesmo Wi-Fi, endereço "No celular", Firewall do Windows.
+- 🔹 **PEQUENA — CORS:** o servidor já aceitava o app do iPhone e do Android. Ficou um comentário explicando isso no `server.js`.
+
+### 📱 Tela no iPhone 15 e no Galaxy S26 Ultra
+- 🔹 **PEQUENA — Altura real da tela (`100dvh`):** a página e as janelas não ficam mais cortadas pela barra do navegador. Vale para as 3 versões.
+- 🔹 **PEQUENA — Áreas seguras dos 4 lados:** o conteúdo e as janelas respeitam a Dynamic Island, a barra de status e a barra de gestos, também com a tela deitada. Vale para as 3 versões.
+- 🔹 **PEQUENA — Tela ponta a ponta no Android 15+:** o Capacitor passa a informar as áreas seguras certas (`SystemBars`, modo `css`). No iPhone, o app desenha atrás da barra de status e as áreas seguras cuidam do espaço.
+- 🔹 **PEQUENA — Barra de status acompanha o tema:** ícones claros no modo escuro e escuros no claro. Usa o `SystemBars`, que já vem no Capacitor 8, sem plugin extra.
+- 🔹 **PEQUENA — Teclado não esconde o campo:** ao tocar numa caixa de texto, a tela rola até ela.
+- 🔹 **PEQUENA — Sem zoom ao tocar num campo no iPhone:** caixas de texto com 16px no celular e no tablet.
+- 🔹 **PEQUENA — Botões maiores para o dedo (44px):** botões do topo, setas, "+", abas, "Hoje", tema e links "Ver ›" no celular e no tablet.
+- 🔹 **PEQUENA — Texto não aumenta sozinho** ao deitar o iPhone (`text-size-adjust`).
+
+### 🍎 iPhone
+- 🟣 **GRANDE — Plataforma iOS adicionada** (pasta `ios/`, Capacitor 8.6.2). Já vem com UIScene, que o Xcode 27 exige, e funciona a partir do iOS 15.
+- 🔹 **PEQUENA — Info.plist:**
+  - nome "Habit Tracker" e região pt-BR;
+  - só retrato no iPhone (no iPad, todas as posições);
+  - acesso à rede local (`NSAllowsLocalNetworking`), com o aviso "Para sincronizar com o servidor no seu computador.".
+- 🔹 **PEQUENA — Versão do iOS** (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`) entra na regra de versionamento do `CLAUDE.md`, que agora tem 5 lugares.
+
+### 🎨 Ícone e abertura
+- 🟣 **GRANDE — Ícone do app:** o quadrado roxo com o check, igual ao logo. A fonte única é `assets/icone.svg`, e dela saem os ícones e a tela de abertura (clara e escura) do iPhone e do Android.
+- 🔹 **PEQUENA — "Adicionar à Tela de Início":** abrindo o endereço do servidor no Safari (ou no Chrome), dá para pôr o app na tela inicial com ícone e sem a barra do navegador. Serve para testar no iPhone sem a conta paga da Apple.
+
+### 🔄 Mudanças
+- 🟣 **GRANDE — appId definitivo: `com.matheuslemos.habittracker`** (era o provisório `com.seuname.habittracker`). ⚠️ No Android vira **outro app**. Antes de instalar o novo, entre na conta e sincronize no app antigo, depois desinstale. Os dados que estão no servidor voltam no login.
+
+### 🤖 Builds automáticos (GitHub Actions)
+- 🟣 **GRANDE — `android.yml`:** a cada mudança na `main` (e em PRs, ou rodando à mão), o GitHub gera o APK e deixa para baixar em *Artifacts* (`HabitTracker-X.Y.Z.apk`). Não precisa mais compilar no PC.
+- 🟣 **GRANDE — `ios.yml`:** compila o app do iPhone num Mac do GitHub (Xcode 26 ou mais novo, escolhido sozinho).
+  - **Etapa A, sempre:** build para o simulador, que prova que o app compila.
+  - **Etapa B, só com os 4 secrets da Apple:** assina, gera o `.ipa` e manda para o **TestFlight**. O número do build é o versionCode mais o número da execução (ex.: `8.12`), porque o TestFlight não aceita repetir.
+- 🔹 **PEQUENA — Chave de debug fixa do Android** (`android/app/debug.keystore`): o APK do GitHub e o do PC têm a mesma assinatura, então a versão nova instala por cima da antiga sem perder dados.
+
+### 📖 README
+- 🔹 **PEQUENA — "Como instalar no Android":** baixando o APK do GitHub ou gerando no PC, com o aviso sobre a troca de appId.
+- 🔹 **PEQUENA — "Como instalar no iPhone":**
+  - pela Tela de Início do Safari (grátis);
+  - pelo TestFlight, passo a passo: conta Apple, app no App Store Connect, chave da API e os 4 secrets no GitHub;
+  - a permissão de **Rede Local**.
+- 🔹 **PEQUENA — Estrutura:** entram `ios/`, `assets/` e `.github/workflows/`.
+
+### 📱 Versão
+- 🔹 **PEQUENA — `1.7.0`** em todos os lugares: Android versionCode 8, iOS build 8.
+
+---
+
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
 
 ### 🧱 Estrutura do código

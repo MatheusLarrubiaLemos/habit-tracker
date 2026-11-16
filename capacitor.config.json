@@ -1,9 +1,17 @@
 {
-  "appId": "com.seuname.habittracker",
+  "appId": "com.matheuslemos.habittracker",
   "appName": "Habit Tracker",
   "webDir": "www",
-  "server": {
-    "androidScheme": "http",
-    "cleartext": true
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    }
+  },
+  "ios": {
+    "contentInset": "never"
   }
 }

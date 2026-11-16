@@ -1,4 +1,4 @@
-package com.seuname.habittracker;
+package com.matheuslemos.habittracker;
 
 import com.getcapacitor.BridgeActivity;
 

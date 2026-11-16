@@ -4,7 +4,7 @@
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const STORAGE_KEY = 'habitTrackerData_v1';
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 const VIEWS = ['home', 'habits', 'routines', 'manage'];
 // 'routines' é o nome interno da tela Agenda (rotinas + compromissos); mantido para não perder a tela salva
 const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Agenda', manage: 'Configurar' };
@@ -138,7 +138,20 @@ function applyTheme() {
   document.body.classList.toggle('dark', dark);
   $('darkToggle').innerHTML = dark ? ICON_SUN : ICON_MOON;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0c12' : '#f4f5fb');
+  // App no iPhone/Android: ícones da barra de status claros no tema escuro e escuros no claro.
+  // "DARK" = conteúdo claro sobre fundo escuro (nome do Capacitor).
+  window.Capacitor?.Plugins?.SystemBars?.setStyle({ style: dark ? 'DARK' : 'LIGHT' }).catch(() => {});
 }
+
+// ============================================================
+// TECLADO NO CELULAR
+// ============================================================
+// Quando o teclado abre, rola até o campo tocado para ele não ficar escondido atrás.
+document.addEventListener('focusin', (e) => {
+  if (!e.target.matches?.('input:not([type=checkbox]):not([type=radio]):not([type=color]), textarea, select')) return;
+  if (window.innerWidth > 1024) return;
+  setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
+});
 
 // ============================================================
 // TOAST (aviso rápido, com "Desfazer" opcional)
@@ -577,16 +590,21 @@ function normalizeServer(url) {
 }
 
 async function api(path, { method = 'GET', body, server = sync.server, token = sync.token, timeout = 8000 } = {}) {
+  // No app (iPhone/Android) o fetch vai pelo lado nativo (CapacitorHttp), que ignora o
+  // AbortController. Por isso o tempo limite também é feito com Promise.race.
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeout);
+  let timer;
+  const expired = new Promise((_, reject) => {
+    timer = setTimeout(() => { ctrl.abort(); reject(new Error('timeout')); }, timeout);
+  });
   let res;
   try {
-    res = await fetch(server + '/api' + path, {
+    res = await Promise.race([fetch(server + '/api' + path, {
       method,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
       body: body ? JSON.stringify(body) : undefined,
       signal: ctrl.signal
-    });
+    }), expired]);
   } catch {
     const err = new Error('Não foi possível falar com o servidor');
     err.network = true;
@@ -826,11 +844,16 @@ async function testServer() {
   accountMsg('Testando…', true);
   try {
     const r = await api('/health', { server, token: '', timeout: 5000 });
-    if (!r.ok) throw new Error();
+    if (r.app !== 'habit-tracker') throw Object.assign(new Error(), { wrongApp: true });
     accountMsg('Servidor encontrado ✓', true);
     return server;
-  } catch {
-    accountMsg('Não encontrei o servidor nesse endereço. Ele está ligado? O celular está no mesmo Wi-Fi?');
+  } catch (e) {
+    if (e.wrongApp || e.status) {
+      accountMsg('Esse endereço respondeu, mas não é o servidor do Habit Tracker. Confira o número da porta (normalmente :3000).');
+    } else {
+      accountMsg('Não encontrei o servidor nesse endereço. Confira se: a janela do servidor está aberta no PC; ' +
+        'o celular está no mesmo Wi-Fi; o endereço é o que aparece em "No celular"; o Firewall do Windows liberou o Node em Redes privadas.');
+    }
   }
 }
 

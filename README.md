@@ -1,9 +1,9 @@
 # Habit Tracker
 
-App de rotina e registro de hábitos: web + Android (Capacitor), com servidor próprio (Node + SQLite).
+App de rotina e registro de hábitos: web, Android e iPhone (Capacitor), com servidor próprio (Node + SQLite).
 
 ## Ligar o servidor (no PC)
-1. Instale o **Node.js LTS**: https://nodejs.org
+1. Instale o **Node.js 22 LTS ou mais novo**: https://nodejs.org (versões antigas não funcionam)
 2. Dê dois cliques em **`iniciar-servidor.bat`** (ou no atalho da Área de Trabalho).
 3. Se o Windows perguntar sobre o firewall, marque **Redes privadas** e clique em **Permitir**.
 4. A janela mostra os endereços. Exemplo:
@@ -13,18 +13,61 @@ App de rotina e registro de hábitos: web + Android (Capacitor), com servidor pr
    ```
    Deixe a janela aberta enquanto usa o app.
 
-## Usar no celular (APK)
-1. Dê dois cliques em **`gerar-apk.bat`**. Ele cria `HabitTracker.apk` na Área de Trabalho.
-2. Mande o arquivo para o celular e instale. Pode ser preciso permitir "instalar apps desconhecidos".
-3. No app, abra **⋮ › Conta e servidor**, digite o endereço "No celular" e crie a conta ou entre.
+## Como instalar no Android
+O PC e o celular precisam estar no **mesmo Wi-Fi**. Para usar fora de casa, veja abaixo.
 
-O celular precisa estar no **mesmo Wi-Fi** que o PC. Para usar fora de casa, veja abaixo.
+**Jeito 1: baixar pronto do GitHub (não precisa compilar nada)**
+1. No GitHub do projeto, abra a aba **Actions** → **Android (APK)** → o build mais recente com ✓ verde.
+2. Lá embaixo, em **Artifacts**, baixe **HabitTracker-apk**. Vem um `.zip` com o `HabitTracker-X.Y.Z.apk` dentro.
+3. Mande o `.apk` para o celular e toque nele. No Galaxy, permita **instalar apps desconhecidos** para o app que abriu o arquivo (Meus Arquivos, Chrome…).
+4. No app, abra **⋮ › Conta e servidor**, digite o endereço "No celular" e crie a conta ou entre.
+
+**Jeito 2: gerar no PC.** Dê dois cliques em **`gerar-apk.bat`**. Ele cria `HabitTracker.apk` na Área de Trabalho (precisa do Android Studio instalado).
+
+As versões novas instalam **por cima** da antiga, sem perder os dados.
+
+> ⚠️ **Vindo da versão 1.6 ou anterior:** o app mudou de identidade (`com.matheuslemos.habittracker`), então o Android vê como outro app. No app antigo, entre na conta e sincronize; depois desinstale e instale o novo. Os dados do servidor voltam no login.
+
+## Como instalar no iPhone
+Não precisa de Mac. Há dois caminhos:
+
+### Caminho rápido e grátis: pela Tela de Início (Safari)
+Serve para usar e testar o visual. Não é o app "de verdade" da App Store, mas fica com ícone e abre em tela cheia.
+1. Ligue o servidor no PC (veja acima). O iPhone precisa estar no mesmo Wi-Fi.
+2. No iPhone, abra o **Safari** e digite o endereço "No celular" (ex.: `http://192.168.0.10:3000`).
+3. Toque em **Compartilhar** (o quadrado com a seta) → **Adicionar à Tela de Início** → **Adicionar**.
+4. Abra pelo ícone **Hábitos**. Entre na conta em **⋮ › Conta e servidor** (o endereço já vem preenchido).
+
+Limites: o servidor do PC precisa estar ligado para o app **abrir** (é dele que a página vem), e as notificações não funcionam.
+
+### App de verdade: TestFlight (precisa da conta paga da Apple)
+O GitHub compila o app num Mac dele e manda para o **TestFlight** (o app de testes da Apple). Quem for testar instala o TestFlight da App Store e recebe um convite.
+
+**O que fazer uma vez só:**
+1. Assine o **Apple Developer Program** (pago, por ano) em https://developer.apple.com/programs/.
+2. Em https://appstoreconnect.apple.com → **Apps** → **+** → **Novo app**: plataforma iOS, nome "Habit Tracker", idioma português (Brasil), Bundle ID **`com.matheuslemos.habittracker`** (se ele não aparecer na lista, crie antes em developer.apple.com → Certificates, IDs & Profiles → Identifiers).
+3. Em App Store Connect → **Usuários e acesso** → **Integrações** → **App Store Connect API** → gere uma chave com acesso **Admin**. Anote o **Issuer ID** e o **Key ID** e baixe o arquivo `AuthKey_XXXX.p8` (só dá para baixar uma vez).
+4. Descubra o seu **Team ID** em https://developer.apple.com/account → Membership details.
+5. No GitHub do projeto: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**. Crie estes 4:
+
+   | Secret | O que colocar |
+   |---|---|
+   | `APPLE_TEAM_ID` | o Team ID (10 letras/números) |
+   | `ASC_KEY_ID` | o Key ID da chave |
+   | `ASC_ISSUER_ID` | o Issuer ID |
+   | `ASC_KEY_P8_BASE64` | o conteúdo do `.p8` em base64. No PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("AuthKey_XXXX.p8"))` |
+
+**Depois, a cada versão:** quando algo entra na `main` (ou ao rodar **Actions → iOS → Run workflow**), o build vai sozinho para o TestFlight. Em App Store Connect → seu app → **TestFlight**, adicione o e-mail de quem vai testar em **Testadores internos**. A pessoa instala o app **TestFlight** no iPhone e aceita o convite.
+
+Sem os secrets, o GitHub só confere se o app compila (para o simulador), sem gerar nada para instalar.
+
+**Na primeira vez que abrir**, o iPhone pergunta se o app pode **encontrar dispositivos na rede local**. Toque em **Permitir**, senão ele não acha o servidor do PC. Se tocar em "Não permitir" sem querer: Ajustes → Privacidade e Segurança → Rede Local → Habit Tracker.
 
 ## Usar fora de casa
 Instale o **Tailscale** (gratuito) no PC e no celular, entrando com a mesma conta. No app, use o endereço Tailscale do PC (ex.: `100.x.x.x:3000`).
 
 ## Migrar para outro PC ou mini computador (ex.: Raspberry Pi)
-1. Na máquina nova, instale Node.js 20 ou superior e clone este repositório.
+1. Na máquina nova, instale Node.js 22 ou superior e clone este repositório.
 2. Copie a pasta **`backend/data`** da máquina antiga para a nova. Ela tem o banco e o segredo do login.
 3. Ligue o servidor (`npm --prefix backend install` e depois `npm --prefix backend start`).
 4. No app, troque o endereço do servidor em **Conta e servidor**.
@@ -72,4 +115,7 @@ Quando uma tela nova for criada, ela precisa entrar nas 3 versões (`pc/`, `tabl
   - `comum/js/home.js`: a tela Início (resumão) e a tela Configurar
 - `backend/`: o servidor (Express + SQLite). O banco fica em `backend/data/habits.db`.
 - `android/`: o projeto Android gerado pelo Capacitor.
+- `ios/`: o projeto do iPhone gerado pelo Capacitor (abre no Xcode, mas aqui é compilado pelo GitHub Actions).
+- `assets/`: o ícone do app (`icone.svg`) e as imagens de onde saem os ícones e a tela de abertura. Para gerar de novo depois de mudar: `npx @capacitor/assets generate --iconBackgroundColor '#4f46e5' --splashBackgroundColor '#f4f5fb' --splashBackgroundColorDark '#0b0c12'`.
+- `.github/workflows/`: os builds automáticos (`android.yml` gera o APK; `ios.yml` compila o iPhone e manda para o TestFlight).
 - `CHANGELOG.md`: as patch notes. 🟣 Mudança grande sobe o número do meio da versão; 🔹 pequena sobe o último.
