@@ -6,7 +6,7 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
-## v1.7.0 — em andamento · "iPhone e Android" (🟣 GRANDE)
+## v1.7.0 — 16/11/2026 · "iPhone e Android" (🟣 GRANDE)
 
 ### 🧱 Estrutura do código
 - 🔹 **PEQUENA — Capacitor atualizado para 8.6.2** (`cli`, `core`, `android`). O plugin de notificações foi para 8.3.1.
@@ -60,6 +60,9 @@
   - pelo TestFlight, passo a passo: conta Apple, app no App Store Connect, chave da API e os 4 secrets no GitHub;
   - a permissão de **Rede Local**.
 - 🔹 **PEQUENA — Estrutura:** entram `ios/`, `assets/` e `.github/workflows/`.
+
+### 📱 Versão
+- 🔹 **PEQUENA — `1.7.0`** em todos os lugares: Android versionCode 8, iOS build 8.
 
 ---
 
