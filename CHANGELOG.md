@@ -31,6 +31,21 @@
 - 🔹 **PEQUENA — Botões maiores para o dedo (44px):** botões do topo, setas, "+", abas, "Hoje", tema e links "Ver ›" no celular e no tablet.
 - 🔹 **PEQUENA — Texto não aumenta sozinho** ao deitar o iPhone (`text-size-adjust`).
 
+### 🍎 iPhone
+- 🟣 **GRANDE — Plataforma iOS adicionada** (pasta `ios/`, Capacitor 8.6.2). Já vem com UIScene, que o Xcode 27 exige, e funciona a partir do iOS 15.
+- 🔹 **PEQUENA — Info.plist:**
+  - nome "Habit Tracker" e região pt-BR;
+  - só retrato no iPhone (no iPad, todas as posições);
+  - acesso à rede local (`NSAllowsLocalNetworking`), com o aviso "Para sincronizar com o servidor no seu computador.".
+- 🔹 **PEQUENA — Versão do iOS** (`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`) entra na regra de versionamento do `CLAUDE.md`, que agora tem 5 lugares.
+
+### 🎨 Ícone e abertura
+- 🟣 **GRANDE — Ícone do app:** o quadrado roxo com o check, igual ao logo. A fonte única é `assets/icone.svg`, e dela saem os ícones e a tela de abertura (clara e escura) do iPhone e do Android.
+- 🔹 **PEQUENA — "Adicionar à Tela de Início":** abrindo o endereço do servidor no Safari (ou no Chrome), dá para pôr o app na tela inicial com ícone e sem a barra do navegador. Serve para testar no iPhone sem a conta paga da Apple.
+
+### 🔄 Mudanças
+- 🟣 **GRANDE — appId definitivo: `com.matheuslemos.habittracker`** (era o provisório `com.seuname.habittracker`). ⚠️ No Android vira **outro app**. Antes de instalar o novo, entre na conta e sincronize no app antigo, depois desinstale. Os dados que estão no servidor voltam no login.
+
 ---
 
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
