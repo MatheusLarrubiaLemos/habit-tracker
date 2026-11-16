@@ -1,0 +1,114 @@
+# Build do app do iPhone (não precisa de Mac: roda num Mac do GitHub).
+#
+# Etapa A (sempre): compila para o simulador. Prova que o projeto iOS está ok.
+# Etapa B (só com os secrets da Apple, e só na main ou rodando à mão): assina, gera o .ipa
+#          e envia para o TestFlight. Os secrets estão explicados no README ("Como instalar no iPhone").
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  XCODE_MINIMO: 26
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Escolher o Xcode mais novo (26 ou mais)
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          VERSAO=$(basename "$XCODE" .app | sed 's/Xcode_//')
+          echo "Xcode encontrado: $VERSAO ($XCODE)"
+          if [ "${VERSAO%%.*}" -lt "$XCODE_MINIMO" ]; then
+            echo "::error::Este Mac do GitHub só tem o Xcode $VERSAO. É preciso o $XCODE_MINIMO ou mais novo."
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Copiar o app (www) para o iOS
+        run: npx cap sync ios
+
+      # ---------- Etapa A: simulador ----------
+      - name: "Etapa A: compilar para o simulador"
+        run: |
+          xcodebuild build \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+
+      # ---------- Etapa B: TestFlight ----------
+      - name: "Etapa B: verificar secrets da Apple"
+        id: apple
+        run: |
+          if [ -n "$APPLE_TEAM_ID" ] && [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8_BASE64" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Sem os secrets da Apple: só a Etapa A (simulador) rodou. Veja o README para ativar o TestFlight."
+          fi
+
+      - name: "Etapa B: assinar e gerar o .ipa"
+        if: steps.apple.outputs.ok == 'true' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
+        run: |
+          KEY="$RUNNER_TEMP/AuthKey.p8"
+          echo "$ASC_KEY_P8_BASE64" | base64 --decode > "$KEY"
+          # Número do build: versionCode + número da execução (o TestFlight não aceita repetir)
+          BASE=$(grep -m1 'CURRENT_PROJECT_VERSION = ' ios/App/App.xcodeproj/project.pbxproj | sed 's/[^0-9]//g')
+          BUILD="$BASE.${{ github.run_number }}"
+          echo "Build $BUILD"
+          AUTH=(-allowProvisioningUpdates -authenticationKeyPath "$KEY" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+          xcodebuild archive \
+            -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION="$BUILD" \
+            "${AUTH[@]}" | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+          cat > build/ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          # "destination: upload" já envia para o App Store Connect / TestFlight
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive -exportPath build/ipa \
+            -exportOptionsPlist build/ExportOptions.plist \
+            "${AUTH[@]}" | tail -n 40
+          test "${PIPESTATUS[0]}" -eq 0
+          rm -f "$KEY"

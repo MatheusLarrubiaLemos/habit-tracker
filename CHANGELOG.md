@@ -46,6 +46,21 @@
 ### 🔄 Mudanças
 - 🟣 **GRANDE — appId definitivo: `com.matheuslemos.habittracker`** (era o provisório `com.seuname.habittracker`). ⚠️ No Android vira **outro app**. Antes de instalar o novo, entre na conta e sincronize no app antigo, depois desinstale. Os dados que estão no servidor voltam no login.
 
+### 🤖 Builds automáticos (GitHub Actions)
+- 🟣 **GRANDE — `android.yml`:** a cada mudança na `main` (e em PRs, ou rodando à mão), o GitHub gera o APK e deixa para baixar em *Artifacts* (`HabitTracker-X.Y.Z.apk`). Não precisa mais compilar no PC.
+- 🟣 **GRANDE — `ios.yml`:** compila o app do iPhone num Mac do GitHub (Xcode 26 ou mais novo, escolhido sozinho).
+  - **Etapa A, sempre:** build para o simulador, que prova que o app compila.
+  - **Etapa B, só com os 4 secrets da Apple:** assina, gera o `.ipa` e manda para o **TestFlight**. O número do build é o versionCode mais o número da execução (ex.: `8.12`), porque o TestFlight não aceita repetir.
+- 🔹 **PEQUENA — Chave de debug fixa do Android** (`android/app/debug.keystore`): o APK do GitHub e o do PC têm a mesma assinatura, então a versão nova instala por cima da antiga sem perder dados.
+
+### 📖 README
+- 🔹 **PEQUENA — "Como instalar no Android":** baixando o APK do GitHub ou gerando no PC, com o aviso sobre a troca de appId.
+- 🔹 **PEQUENA — "Como instalar no iPhone":**
+  - pela Tela de Início do Safari (grátis);
+  - pelo TestFlight, passo a passo: conta Apple, app no App Store Connect, chave da API e os 4 secrets no GitHub;
+  - a permissão de **Rede Local**.
+- 🔹 **PEQUENA — Estrutura:** entram `ios/`, `assets/` e `.github/workflows/`.
+
 ---
 
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
