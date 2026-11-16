@@ -14,6 +14,13 @@
 - 🔹 **PEQUENA — `package-lock.json` limpo:** saíram as dependências antigas do servidor que tinham ficado na raiz.
 - 🔹 **PEQUENA — `android/gradlew` executável:** o arquivo foi criado no Windows e não rodava no Linux nem no Mac (necessário para o build automático).
 
+### 🛠️ Conexão com o servidor do PC
+- 🟣 **GRANDE — Chamadas pelo lado nativo (CapacitorHttp):** no iPhone e no Android, o app fala com o servidor pelo sistema, e não pelo navegador interno. Assim o iPhone não bloqueia o servidor `http://192.168…` do PC.
+- 🔹 **PEQUENA — Android em `https://localhost`:** o app passa a abrir no endereço interno padrão do Capacitor. As regras de HTTP ficam num arquivo próprio, `network_security_config.xml`, que explica quando dá para fechar o HTTP de vez.
+- 🔹 **PEQUENA — Tempo limite que funciona no celular:** se o servidor não responde, o app desiste depois de 8 segundos e mostra "Servidor fora do ar". Antes, no app nativo, a espera podia não ter fim.
+- 🔹 **PEQUENA — "Testar" mais claro:** diz se o endereço responde mas não é o Habit Tracker (porta errada). Se não achar o servidor, lista o que conferir: janela aberta, mesmo Wi-Fi, endereço "No celular", Firewall do Windows.
+- 🔹 **PEQUENA — CORS:** o servidor já aceitava o app do iPhone e do Android. Ficou um comentário explicando isso no `server.js`.
+
 ---
 
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)

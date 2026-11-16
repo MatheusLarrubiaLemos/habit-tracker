@@ -2,8 +2,9 @@
   "appId": "com.seuname.habittracker",
   "appName": "Habit Tracker",
   "webDir": "www",
-  "server": {
-    "androidScheme": "http",
-    "cleartext": true
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
   }
 }

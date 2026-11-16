@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Regras de rede do app Android.
+
+  O app só fala com UM servidor: o endereço que a pessoa digita em "Conta e servidor"
+  (o PC de casa, ex.: http://192.168.0.10:3000, ou o Tailscale, ex.: http://100.x.x.x:3000).
+  Esse servidor não tem HTTPS, então é preciso permitir HTTP (cleartext).
+
+  O Android não aceita faixas de IP aqui (não dá para escrever "só 192.168.*"), e o endereço
+  muda de casa para casa. Por isso o HTTP fica permitido, mas só é usado para esse servidor:
+  o app não carrega nada de outros sites.
+
+  Quando o servidor tiver HTTPS (ex.: Tailscale com certificado), troque para
+  cleartextTrafficPermitted="false".
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
