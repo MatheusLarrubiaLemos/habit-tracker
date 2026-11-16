@@ -1,6 +1,6 @@
 # Habit Tracker
 
-App de rotina e registro de hábitos: web, Android e iPhone (Capacitor), com servidor próprio (Node + SQLite).
+App de rotina e registro de hábitos: site (funciona em qualquer celular, inclusive iPhone) e app Android (Capacitor), com servidor próprio opcional (Node + SQLite).
 
 ## Ligar o servidor (no PC)
 1. Instale o **Node.js 22 LTS ou mais novo**: https://nodejs.org (versões antigas não funcionam)
@@ -28,40 +28,31 @@ As versões novas instalam **por cima** da antiga, sem perder os dados.
 
 > ⚠️ **Vindo da versão 1.6 ou anterior:** o app mudou de identidade (`com.matheuslemos.habittracker`), então o Android vê como outro app. No app antigo, entre na conta e sincronize; depois desinstale e instale o novo. Os dados do servidor voltam no login.
 
-## Como instalar no iPhone
-Não precisa de Mac. Há dois caminhos:
+## Usar pelo site (iPhone, Android ou PC — sem instalar nada)
+O app também funciona como **site**. Não precisa do PC ligado nem de conta: **os dados ficam salvos no próprio navegador** de cada aparelho.
 
-### Caminho rápido e grátis: pela Tela de Início (Safari)
-Serve para usar e testar o visual. Não é o app "de verdade" da App Store, mas fica com ícone e abre em tela cheia.
-1. Ligue o servidor no PC (veja acima). O iPhone precisa estar no mesmo Wi-Fi.
-2. No iPhone, abra o **Safari** e digite o endereço "No celular" (ex.: `http://192.168.0.10:3000`).
-3. Toque em **Compartilhar** (o quadrado com a seta) → **Adicionar à Tela de Início** → **Adicionar**.
-4. Abra pelo ícone **Hábitos**. Entre na conta em **⋮ › Conta e servidor** (o endereço já vem preenchido).
+**Abrir:** acesse o endereço do site (ex.: `https://matheuslarrubialemos.github.io/habit-tracker/`). Depois de aberto uma vez, ele **funciona até sem internet**.
 
-Limites: o servidor do PC precisa estar ligado para o app **abrir** (é dele que a página vem), e as notificações não funcionam.
+**Pôr na tela inicial (recomendado):**
+- **iPhone:** abra no **Safari** → **Compartilhar** (quadrado com a seta) → **Adicionar à Tela de Início** → **Adicionar**.
+- **Android:** abra no **Chrome** → **⋮** → **Adicionar à tela inicial** (ou **Instalar app**).
 
-### App de verdade: TestFlight (precisa da conta paga da Apple)
-O GitHub compila o app num Mac dele e manda para o **TestFlight** (o app de testes da Apple). Quem for testar instala o TestFlight da App Store e recebe um convite.
+Fica com o ícone **Hábitos** e abre em tela cheia, como um app.
 
-**O que fazer uma vez só:**
-1. Assine o **Apple Developer Program** (pago, por ano) em https://developer.apple.com/programs/.
-2. Em https://appstoreconnect.apple.com → **Apps** → **+** → **Novo app**: plataforma iOS, nome "Habit Tracker", idioma português (Brasil), Bundle ID **`com.matheuslemos.habittracker`** (se ele não aparecer na lista, crie antes em developer.apple.com → Certificates, IDs & Profiles → Identifiers).
-3. Em App Store Connect → **Usuários e acesso** → **Integrações** → **App Store Connect API** → gere uma chave com acesso **Admin**. Anote o **Issuer ID** e o **Key ID** e baixe o arquivo `AuthKey_XXXX.p8` (só dá para baixar uma vez).
-4. Descubra o seu **Team ID** em https://developer.apple.com/account → Membership details.
-5. No GitHub do projeto: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**. Crie estes 4:
+**Cuidados com os dados:**
+- Os dados ficam **só naquele navegador, naquele aparelho**. Outro celular ou outro navegador começa vazio.
+- No iPhone, use **sempre pelo ícone da Tela de Início**. Se usar só pelo Safari, o iPhone pode apagar os dados de sites que ficam mais de 7 dias sem ser abertos.
+- Apagar os dados de navegação/histórico do site apaga os hábitos.
+- Faça backup de vez em quando: **⋮ › Exportar backup (JSON)**. Para levar para outro aparelho, use **Importar backup** lá.
+- No site, a sincronização com o servidor do PC **não funciona**: o site é `https` e o servidor do PC é `http`, e o navegador bloqueia. Para sincronizar, use o app Android ou abra pelo endereço do servidor.
 
-   | Secret | O que colocar |
-   |---|---|
-   | `APPLE_TEAM_ID` | o Team ID (10 letras/números) |
-   | `ASC_KEY_ID` | o Key ID da chave |
-   | `ASC_ISSUER_ID` | o Issuer ID |
-   | `ASC_KEY_P8_BASE64` | o conteúdo do `.p8` em base64. No PowerShell: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("AuthKey_XXXX.p8"))` |
+### Publicar o site (uma vez só)
+O GitHub publica a pasta `www/` sozinho a cada mudança na `main` (`.github/workflows/site.yml`). Para ligar:
+1. O repositório precisa ser **público** (o GitHub Pages grátis exige). Settings → General → lá embaixo, **Change visibility** → **Public**. Não há senhas no repositório: o `.env` e o banco (`backend/data`) não sobem.
+2. Settings → **Pages** → em **Source**, escolha **GitHub Actions**.
+3. Aba **Actions** → **Site (GitHub Pages)** → **Run workflow**. O endereço aparece no fim do build.
 
-**Depois, a cada versão:** quando algo entra na `main` (ou ao rodar **Actions → iOS → Run workflow**), o build vai sozinho para o TestFlight. Em App Store Connect → seu app → **TestFlight**, adicione o e-mail de quem vai testar em **Testadores internos**. A pessoa instala o app **TestFlight** no iPhone e aceita o convite.
-
-Sem os secrets, o GitHub só confere se o app compila (para o simulador), sem gerar nada para instalar.
-
-**Na primeira vez que abrir**, o iPhone pergunta se o app pode **encontrar dispositivos na rede local**. Toque em **Permitir**, senão ele não acha o servidor do PC. Se tocar em "Não permitir" sem querer: Ajustes → Privacidade e Segurança → Rede Local → Habit Tracker.
+Quer manter o repositório privado? Use o **Cloudflare Pages** ou o **Netlify** (grátis): crie a conta, conecte ao GitHub, escolha este repositório e configure **pasta de publicação = `www`**, sem comando de build.
 
 ## Usar fora de casa
 Instale o **Tailscale** (gratuito) no PC e no celular, entrando com a mesma conta. No app, use o endereço Tailscale do PC (ex.: `100.x.x.x:3000`).
@@ -115,7 +106,7 @@ Quando uma tela nova for criada, ela precisa entrar nas 3 versões (`pc/`, `tabl
   - `comum/js/home.js`: a tela Início (resumão) e a tela Configurar
 - `backend/`: o servidor (Express + SQLite). O banco fica em `backend/data/habits.db`.
 - `android/`: o projeto Android gerado pelo Capacitor.
-- `ios/`: o projeto do iPhone gerado pelo Capacitor (abre no Xcode, mas aqui é compilado pelo GitHub Actions).
 - `assets/`: o ícone do app (`icone.svg`) e as imagens de onde saem os ícones e a tela de abertura. Para gerar de novo depois de mudar: `npx @capacitor/assets generate --iconBackgroundColor '#4f46e5' --splashBackgroundColor '#f4f5fb' --splashBackgroundColorDark '#0b0c12'`.
-- `.github/workflows/`: os builds automáticos (`android.yml` gera o APK; `ios.yml` compila o iPhone e manda para o TestFlight).
+- `.github/workflows/`: os builds automáticos (`android.yml` gera o APK; `site.yml` publica o site no GitHub Pages).
+- `www/sw.js`: faz o site abrir sem internet (guarda uma cópia dos arquivos do app; os dados ficam no `localStorage`).
 - `CHANGELOG.md`: as patch notes. 🟣 Mudança grande sobe o número do meio da versão; 🔹 pequena sobe o último.
