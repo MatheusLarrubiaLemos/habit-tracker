@@ -3,7 +3,7 @@
 App de rotina e registro de hábitos: web + Android (Capacitor), com servidor próprio (Node + SQLite).
 
 ## Ligar o servidor (no PC)
-1. Instale o **Node.js LTS**: https://nodejs.org
+1. Instale o **Node.js 22 LTS ou mais novo**: https://nodejs.org (versões antigas não funcionam)
 2. Dê dois cliques em **`iniciar-servidor.bat`** (ou no atalho da Área de Trabalho).
 3. Se o Windows perguntar sobre o firewall, marque **Redes privadas** e clique em **Permitir**.
 4. A janela mostra os endereços. Exemplo:
@@ -24,7 +24,7 @@ O celular precisa estar no **mesmo Wi-Fi** que o PC. Para usar fora de casa, vej
 Instale o **Tailscale** (gratuito) no PC e no celular, entrando com a mesma conta. No app, use o endereço Tailscale do PC (ex.: `100.x.x.x:3000`).
 
 ## Migrar para outro PC ou mini computador (ex.: Raspberry Pi)
-1. Na máquina nova, instale Node.js 20 ou superior e clone este repositório.
+1. Na máquina nova, instale Node.js 22 ou superior e clone este repositório.
 2. Copie a pasta **`backend/data`** da máquina antiga para a nova. Ela tem o banco e o segredo do login.
 3. Ligue o servidor (`npm --prefix backend install` e depois `npm --prefix backend start`).
 4. No app, troque o endereço do servidor em **Conta e servidor**.

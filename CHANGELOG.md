@@ -6,6 +6,16 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.7.0 — em andamento · "iPhone e Android" (🟣 GRANDE)
+
+### 🧱 Estrutura do código
+- 🔹 **PEQUENA — Capacitor atualizado para 8.6.2** (`cli`, `core`, `android`). O plugin de notificações foi para 8.3.1.
+- 🔹 **PEQUENA — Node.js 22 ou mais novo** passa a ser obrigatório (era 20). Está no `package.json`, no `backend/package.json` e no README.
+- 🔹 **PEQUENA — `package-lock.json` limpo:** saíram as dependências antigas do servidor que tinham ficado na raiz.
+- 🔹 **PEQUENA — `android/gradlew` executável:** o arquivo foi criado no Windows e não rodava no Linux nem no Mac (necessário para o build automático).
+
+---
+
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
 
 ### 🧱 Estrutura do código
