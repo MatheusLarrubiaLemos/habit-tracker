@@ -4,7 +4,7 @@
 const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const WEEKDAYS = ['D','S','T','Q','Q','S','S'];
 const STORAGE_KEY = 'habitTrackerData_v1';
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.8.0';
 const VIEWS = ['home', 'habits', 'routines', 'manage'];
 // 'routines' é o nome interno da tela Agenda (rotinas + compromissos); mantido para não perder a tela salva
 const VIEW_TITLES = { home: 'Início', habits: 'Hábitos', routines: 'Agenda', manage: 'Configurar' };
@@ -138,7 +138,7 @@ function applyTheme() {
   document.body.classList.toggle('dark', dark);
   $('darkToggle').innerHTML = dark ? ICON_SUN : ICON_MOON;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0c12' : '#f4f5fb');
-  // App no iPhone/Android: ícones da barra de status claros no tema escuro e escuros no claro.
+  // App Android: ícones da barra de status claros no tema escuro e escuros no claro.
   // "DARK" = conteúdo claro sobre fundo escuro (nome do Capacitor).
   window.Capacitor?.Plugins?.SystemBars?.setStyle({ style: dark ? 'DARK' : 'LIGHT' }).catch(() => {});
 }
@@ -553,6 +553,10 @@ function importData(file) {
 // quando o servidor responde, a fila é enviada e os dados são atualizados.
 // ============================================================
 const SYNC_KEY = 'habitTrackerSync_v1';
+const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
+// Site publicado (https, ex.: GitHub Pages): os dados ficam só neste navegador.
+// O servidor do PC (http) não pode ser usado daqui: o navegador bloqueia http dentro de https.
+const isSite = !isNativeApp && location.protocol === 'https:';
 let sync = { server: '', token: '', email: '', queue: [], lastSync: null };
 let syncStatus = 'local';   // local | syncing | ok | offline | error
 let syncing = false;
@@ -561,8 +565,7 @@ let opCounter = 0;
 function loadSync() {
   try { Object.assign(sync, JSON.parse(localStorage.getItem(SYNC_KEY) || '{}')); } catch {}
   if (!Array.isArray(sync.queue)) sync.queue = [];
-  const isNativeApp = !!window.Capacitor?.isNativePlatform?.();
-  if (!sync.server && !isNativeApp && /^https?:$/.test(location.protocol)) {
+  if (!sync.server && !isNativeApp && location.protocol === 'http:') {
     sync.server = location.origin;   // app aberto pelo próprio servidor (ex.: http://192.168.0.10:3000)
   }
 }
@@ -590,7 +593,7 @@ function normalizeServer(url) {
 }
 
 async function api(path, { method = 'GET', body, server = sync.server, token = sync.token, timeout = 8000 } = {}) {
-  // No app (iPhone/Android) o fetch vai pelo lado nativo (CapacitorHttp), que ignora o
+  // No app Android o fetch vai pelo lado nativo (CapacitorHttp), que ignora o
   // AbortController. Por isso o tempo limite também é feito com Promise.race.
   const ctrl = new AbortController();
   let timer;
@@ -804,7 +807,7 @@ function setSyncStatus(s) {
   if (!el) return;
   const n = sync.queue.length;
   const map = {
-    local:   ['', 'Salvo só neste aparelho · conectar ao servidor'],
+    local:   ['', isSite ? 'Salvo neste navegador · fazer backup em ⋮ › Exportar' : 'Salvo só neste aparelho · conectar ao servidor'],
     syncing: ['busy', 'Sincronizando…'],
     ok:      ['ok', `Sincronizado · ${sync.email}`],
     offline: ['warn', `Servidor fora do ar${n ? ` · ${n} alteraç${n === 1 ? 'ão' : 'ões'} na fila` : ''} · tentar de novo`],
@@ -826,6 +829,8 @@ function openAccount() {
   $('accountServer').textContent = sync.server || '';
   $('accountLast').textContent = sync.lastSync ? new Date(sync.lastSync).toLocaleString('pt-BR') : 'nunca';
   $('accountMsg').textContent = '';
+  if (isSite && !isIn) accountMsg('Neste site, seus dados ficam salvos neste navegador e não precisam de conta. ' +
+    'A sincronização só funciona com um servidor em https (o servidor do PC, em http, é bloqueado pelo navegador).');
   $('accountModal').hidden = false;
   if (!isIn) setTimeout(() => (sync.server ? $('emailInput') : $('serverInput')).focus(), 50);
 }
@@ -837,9 +842,19 @@ function accountMsg(text, ok) {
   el.className = 'account-msg ' + (ok ? 'ok' : 'err');
 }
 
+function blockedOnSite(server) {
+  if (isSite && server.startsWith('http:')) {
+    accountMsg('Este site está em https e o navegador não deixa ele falar com um servidor http (como o do PC). ' +
+      'Seus dados continuam salvos neste navegador. Para sincronizar com o PC, abra o app pelo endereço do servidor.');
+    return true;
+  }
+  return false;
+}
+
 async function testServer() {
   const server = normalizeServer($('serverInput').value);
   if (!server) return accountMsg('Digite o endereço do servidor');
+  if (blockedOnSite(server)) return;
   $('serverInput').value = server;
   accountMsg('Testando…', true);
   try {
@@ -863,6 +878,7 @@ async function doAuth(kind) {
   const password = $('passwordInput').value;
   if (!server) return accountMsg('Digite o endereço do servidor');
   if (!email || !password) return accountMsg('Preencha email e senha');
+  if (blockedOnSite(server)) return;
   $('serverInput').value = server;
   accountMsg(kind === 'register' ? 'Criando conta…' : 'Entrando…', true);
   try {
@@ -1009,6 +1025,18 @@ document.addEventListener('DOMContentLoaded', function init() {
   bindEvents();
   render();
   setSyncStatus(loggedIn() ? 'syncing' : 'local');
+  setupSite();
   requestAnimationFrame(state.view === 'habits' ? scrollToToday : state.view === 'routines' ? scrollWeekToToday : () => {});
   if (loggedIn()) syncNow();
 });
+
+// ============================================================
+// SITE: abrir sem internet e guardar os dados com segurança
+// ============================================================
+function setupSite() {
+  if (isNativeApp || !window.isSecureContext) return;   // app Android ou http do PC: nada a fazer
+  // Abrir mesmo sem internet (o sw.js fica na raiz do site, ao lado do index.html)
+  navigator.serviceWorker?.register(new URL('../sw.js', location.href).href).catch(() => {});
+  // Pede ao navegador para não apagar os dados sozinho quando faltar espaço
+  navigator.storage?.persist?.().catch(() => {});
+}

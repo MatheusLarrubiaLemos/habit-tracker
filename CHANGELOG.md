@@ -6,6 +6,38 @@
 >
 > Cada item das notas vem marcado como 🟣 GRANDE ou 🔹 PEQUENA.
 
+## v1.8.0 — 16/11/2026 · "Site para qualquer celular" (🟣 GRANDE)
+
+### ✨ Novidades
+- 🟣 **GRANDE — O app agora é um site que funciona sozinho:** basta abrir o endereço, sem PC ligado, sem conta e sem instalar nada. **Os dados ficam salvos no próprio navegador.** É o jeito de usar no iPhone.
+- 🟣 **GRANDE — Funciona sem internet:** depois de aberto uma vez, o site abre mesmo offline (`www/sw.js`). Com internet, sempre pega a versão mais nova.
+- 🔹 **PEQUENA — Dados mais protegidos:** o site pede ao navegador para não apagar os dados sozinho quando faltar espaço (`navigator.storage.persist`).
+- 🟣 **GRANDE — Publicação automática no GitHub Pages** (`.github/workflows/site.yml`): a cada mudança na `main`, a pasta `www/` vai para o ar. Só roda com o repositório público. O README explica como ligar, ou como usar o Cloudflare Pages / Netlify para manter o repositório privado.
+
+### 🔄 Mudanças
+- 🔹 **PEQUENA — Barra de status no site:** mostra "Salvo neste navegador · fazer backup em ⋮ › Exportar".
+- 🔹 **PEQUENA — "Conta e servidor" no site:** explica que os dados ficam no navegador e que o servidor do PC (`http`) não pode ser usado de um site `https`. O "Testar" e o "Entrar" avisam isso em vez de dar um erro sem explicação.
+
+### 🐛 Correções
+- 🔹 **PEQUENA — Endereço do servidor:** só vem preenchido sozinho quando o app é aberto pelo próprio servidor do PC (`http`). Antes, num site publicado, ele preenchia o endereço do próprio site.
+
+### 🗑️ Removido
+- 🟣 **GRANDE — App nativo do iPhone:** saíram a pasta `ios/`, o pacote `@capacitor/ios`, o build `ios.yml` (TestFlight) e as instruções da Apple. No iPhone, usa-se o site.
+- 🔹 **PEQUENA — Regra de versão:** volta a ter **4 lugares** no `CLAUDE.md` (sem o Xcode).
+- Ficam, porque também servem ao site no iPhone: as áreas seguras, os campos com 16px, os botões de 44px e o ícone na Tela de Início.
+
+### 📖 README
+- 🔹 **PEQUENA — Nova seção "Usar pelo site":**
+  - como abrir e pôr na tela inicial no iPhone e no Android;
+  - os cuidados com os dados (usar pelo ícone no iPhone, fazer backup);
+  - como publicar o site.
+- 🔹 **PEQUENA — Saiu a seção "Como instalar no iPhone"** (TestFlight).
+
+### 📱 Android
+- 🔹 **PEQUENA — Versão do APK:** `1.8.0` (versionCode 9).
+
+---
+
 ## v1.7.0 — 16/11/2026 · "iPhone e Android" (🟣 GRANDE)
 
 ### 🧱 Estrutura do código

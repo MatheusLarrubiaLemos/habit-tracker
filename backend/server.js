@@ -6,8 +6,8 @@ require('dotenv').config({ path: path.join(__dirname, '.env'), quiet: true });
 const { DATA_DIR } = require('./db');
 
 const app = express();
-// CORS aberto: aceita o navegador (http://IP-DO-PC:3000), o app do iPhone (capacitor://localhost)
-// e o do Android (https://localhost). O acesso aos dados é protegido pelo login (token).
+// CORS aberto: aceita o navegador (http://IP-DO-PC:3000) e o app Android (https://localhost).
+// O acesso aos dados é protegido pelo login (token).
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
