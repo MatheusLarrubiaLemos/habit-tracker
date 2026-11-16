@@ -5,6 +5,13 @@
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
+    },
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
     }
+  },
+  "ios": {
+    "contentInset": "never"
   }
 }

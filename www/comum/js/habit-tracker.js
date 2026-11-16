@@ -138,7 +138,20 @@ function applyTheme() {
   document.body.classList.toggle('dark', dark);
   $('darkToggle').innerHTML = dark ? ICON_SUN : ICON_MOON;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0b0c12' : '#f4f5fb');
+  // App no iPhone/Android: ícones da barra de status claros no tema escuro e escuros no claro.
+  // "DARK" = conteúdo claro sobre fundo escuro (nome do Capacitor).
+  window.Capacitor?.Plugins?.SystemBars?.setStyle({ style: dark ? 'DARK' : 'LIGHT' }).catch(() => {});
 }
+
+// ============================================================
+// TECLADO NO CELULAR
+// ============================================================
+// Quando o teclado abre, rola até o campo tocado para ele não ficar escondido atrás.
+document.addEventListener('focusin', (e) => {
+  if (!e.target.matches?.('input:not([type=checkbox]):not([type=radio]):not([type=color]), textarea, select')) return;
+  if (window.innerWidth > 1024) return;
+  setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350);
+});
 
 // ============================================================
 // TOAST (aviso rápido, com "Desfazer" opcional)

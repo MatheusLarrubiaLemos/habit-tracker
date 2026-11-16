@@ -21,6 +21,16 @@
 - 🔹 **PEQUENA — "Testar" mais claro:** diz se o endereço responde mas não é o Habit Tracker (porta errada). Se não achar o servidor, lista o que conferir: janela aberta, mesmo Wi-Fi, endereço "No celular", Firewall do Windows.
 - 🔹 **PEQUENA — CORS:** o servidor já aceitava o app do iPhone e do Android. Ficou um comentário explicando isso no `server.js`.
 
+### 📱 Tela no iPhone 15 e no Galaxy S26 Ultra
+- 🔹 **PEQUENA — Altura real da tela (`100dvh`):** a página e as janelas não ficam mais cortadas pela barra do navegador. Vale para as 3 versões.
+- 🔹 **PEQUENA — Áreas seguras dos 4 lados:** o conteúdo e as janelas respeitam a Dynamic Island, a barra de status e a barra de gestos, também com a tela deitada. Vale para as 3 versões.
+- 🔹 **PEQUENA — Tela ponta a ponta no Android 15+:** o Capacitor passa a informar as áreas seguras certas (`SystemBars`, modo `css`). No iPhone, o app desenha atrás da barra de status e as áreas seguras cuidam do espaço.
+- 🔹 **PEQUENA — Barra de status acompanha o tema:** ícones claros no modo escuro e escuros no claro. Usa o `SystemBars`, que já vem no Capacitor 8, sem plugin extra.
+- 🔹 **PEQUENA — Teclado não esconde o campo:** ao tocar numa caixa de texto, a tela rola até ela.
+- 🔹 **PEQUENA — Sem zoom ao tocar num campo no iPhone:** caixas de texto com 16px no celular e no tablet.
+- 🔹 **PEQUENA — Botões maiores para o dedo (44px):** botões do topo, setas, "+", abas, "Hoje", tema e links "Ver ›" no celular e no tablet.
+- 🔹 **PEQUENA — Texto não aumenta sozinho** ao deitar o iPhone (`text-size-adjust`).
+
 ---
 
 ## v1.6.1 — 12/11/2026 · "Arrumação" (🔹 PEQUENA)
